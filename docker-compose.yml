@@ -10,7 +10,6 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       MONGODB_URI: ${MONGODB_URI}
       MONGODB_DB_NAME: ${MONGODB_DB_NAME:-weatherflow}
-      LOG_LEVEL: ${LOG_LEVEL:-debug}
     networks:
       - weatherflow-network
     restart: unless-stopped
