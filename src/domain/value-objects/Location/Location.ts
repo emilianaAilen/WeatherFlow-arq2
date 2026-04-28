@@ -10,4 +10,12 @@ export class Location {
   static create(latitude: number, longitude: number): Location {
     return new Location(latitude, longitude);
   }
+
+  getLatitude(): number {
+    return this.latitude;
+  }
+
+  getLongitude(): number {
+    return this.longitude;
+  }
 }
