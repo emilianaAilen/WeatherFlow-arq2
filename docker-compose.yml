@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: weatherflow-app
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_DB_NAME: ${MONGODB_DB_NAME:-weatherflow}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    networks:
+      - weatherflow-network
+    restart: unless-stopped
+
+networks:
+  weatherflow-network:
+    driver: bridge
