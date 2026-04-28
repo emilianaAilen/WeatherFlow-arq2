@@ -42,6 +42,14 @@ cp .env.example .env
 | `MONGODB_URI`   | MongoDB connection string          | —             |
 | `MONGODB_DB_NAME` | Database name                    | `weatherflow` |
 
+## Testing
+
+Unit tests cover the domain layer (value objects and entities).
+
+```bash
+npm test
+```
+
 ## Running Locally
 
 ### Without Docker

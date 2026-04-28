@@ -1,7 +1,7 @@
-import { Temperature } from '../value-objects/Temperature';
-import { Humidity } from '../value-objects/Humidity';
-import { Pressure } from '../value-objects/Pressure';
-import { Alert } from '../value-objects/Alert';
+import { Temperature } from '../../value-objects/Temperature';
+import { Humidity } from '../../value-objects/Humidity';
+import { Pressure } from '../../value-objects/Pressure';
+import { Alert } from '../../value-objects/Alert';
 
 export class ClimateMeasurement {
   readonly id: string;
@@ -36,14 +36,13 @@ export class ClimateMeasurement {
     humidity: number,
     atmosphericPressure: number,
     dateTime: Date,
-    _alert: Alert,
     stationId: string
   ): ClimateMeasurement {
     const temperatureObj = new Temperature(temperature);
     const humidityObj = new Humidity(humidity);
     const pressureObj = new Pressure(atmosphericPressure);
-    const alertObj = Alert.fromValue(temperatureObj, humidityObj, pressureObj);
-    
+    const alertObj = Alert.fromValues(temperatureObj, humidityObj, pressureObj);
+
     return new ClimateMeasurement(
       id,
       temperatureObj,

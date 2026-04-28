@@ -1,5 +1,5 @@
-import { Location } from '../value-objects/Location';
-import { StationStatusType } from '../types';
+import { Location } from '../../value-objects/Location';
+import { StationStatusType } from '../../types';
 
 export class WeatherStation {
   readonly id: string;
