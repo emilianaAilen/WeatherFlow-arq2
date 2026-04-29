@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { WeatherStation, Location, StationStatusType } from '@/domain';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
 import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
+import { IClimateMeasurementRepository } from '@/infrastructure/ports/IClimateMeasurementRepository';
 import { WeatherStationPort } from '@/user-interface/ports/WeatherStationPort';
 import { CreateWeatherStationRequest } from '@/user-interface/dtos/CreateWeatherStationDTO';
 import { UpdateWeatherStationRequest } from '@/user-interface/dtos/UpdateWeatherStationDTO';
@@ -10,6 +11,7 @@ export class WeatherStationService implements WeatherStationPort {
   constructor(
     private readonly weatherStationRepository: IWeatherStationRepository,
     private readonly userRepository: IUserRepository,
+    private readonly climateMeasurementRepository: IClimateMeasurementRepository,
   ) {}
 
   async getStationById(id: string): Promise<WeatherStation | null> {
@@ -47,6 +49,22 @@ export class WeatherStationService implements WeatherStationPort {
     );
     await this.weatherStationRepository.update(id, updated);
     return updated;
+  }
+
+  async deleteStation(id: string): Promise<void> {
+    const existing = await this.weatherStationRepository.findById(id);
+    if (!existing) {
+      const error = new Error('Weather station not found');
+      (error as any).statusCode = 404;
+      throw error;
+    }
+    const measurement = await this.climateMeasurementRepository.findByStationId(id);
+    if (measurement) {
+      const error = new Error('Weather station has associated measurements and cannot be deleted');
+      (error as any).statusCode = 409;
+      throw error;
+    }
+    await this.weatherStationRepository.remove(id);
   }
 
   async createWeatherStation(dto: CreateWeatherStationRequest): Promise<WeatherStation> {

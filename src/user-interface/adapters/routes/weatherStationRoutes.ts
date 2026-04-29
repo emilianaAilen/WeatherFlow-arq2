@@ -19,8 +19,8 @@ router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
   weatherStationController.updateWeatherStation(req, res, next),
 );
 
-router.delete('/:stationId', (_req: Request, res: Response) => {
-  res.status(204).send();
-});
+router.delete('/:id', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.deleteStation(req, res, next),
+);
 
 export default router;
