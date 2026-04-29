@@ -19,6 +19,20 @@ export const CreateWeatherStationRequestSchema = z
   })
   .openapi('CreateWeatherStationRequest');
 
+export const UpdateWeatherStationRequestSchema = z
+  .object({
+    name: z.string().min(1).optional().openapi({ example: 'Station Beta', description: 'Station name' }),
+    location: z
+      .object({
+        latitude: z.number().min(-90).max(90).openapi({ example: -34.6 }),
+        longitude: z.number().min(-180).max(180).openapi({ example: -58.4 }),
+      })
+      .optional(),
+    model: z.string().min(1).optional().openapi({ example: 'ModelY', description: 'Sensor model identifier' }),
+    status: z.enum(['Active', 'Inactive']).optional().openapi({ example: 'Inactive', description: 'Station status' }),
+  })
+  .openapi('UpdateWeatherStationRequest');
+
 export const WeatherStationResponseSchema = z
   .object({
     id: z.string().openapi({ example: '64b1f2c3e4b0a1b2c3d4e5f6', description: 'Station ID' }),

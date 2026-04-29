@@ -15,9 +15,9 @@ router.get('/:stationId', (req: Request, res: Response) => {
   res.status(200).json({ message: `Get weather station ${req.params.stationId}` });
 });
 
-router.patch('/:stationId', (req: Request, res: Response) => {
-  res.status(200).json({ message: `Update weather station ${req.params.stationId}` });
-});
+router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.updateWeatherStation(req, res, next),
+);
 
 router.delete('/:stationId', (req: Request, res: Response) => {
   res.status(204).send();
