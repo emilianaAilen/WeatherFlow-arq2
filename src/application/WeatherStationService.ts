@@ -4,12 +4,42 @@ import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStatio
 import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
 import { WeatherStationPort } from '@/user-interface/ports/WeatherStationPort';
 import { CreateWeatherStationRequest } from '@/user-interface/dtos/CreateWeatherStationDTO';
+import { UpdateWeatherStationRequest } from '@/user-interface/dtos/UpdateWeatherStationDTO';
 
 export class WeatherStationService implements WeatherStationPort {
   constructor(
     private readonly weatherStationRepository: IWeatherStationRepository,
     private readonly userRepository: IUserRepository,
   ) {}
+
+  async updateWeatherStation(id: string, dto: UpdateWeatherStationRequest): Promise<WeatherStation> {
+    const existing = await this.weatherStationRepository.findById(id);
+    if (!existing) {
+      const error = new Error('Weather station not found');
+      (error as any).statusCode = 404;
+      throw error;
+    }
+    if (dto.name && dto.name !== existing.name) {
+      const nameTaken = await this.weatherStationRepository.findStationByName(dto.name);
+      if (nameTaken) {
+        const error = new Error('A weather station with that name already exists');
+        (error as any).statusCode = 409;
+        throw error;
+      }
+    }
+    const updated = WeatherStation.create(
+      existing.id,
+      dto.name ?? existing.name,
+      dto.location
+        ? Location.create(dto.location.latitude, dto.location.longitude)
+        : existing.location,
+      dto.model ?? existing.sensorModel,
+      dto.status ?? existing.status,
+      existing.ownerId,
+    );
+    await this.weatherStationRepository.update(id, updated);
+    return updated;
+  }
 
   async createWeatherStation(dto: CreateWeatherStationRequest): Promise<WeatherStation> {
     const owner = await this.userRepository.findById(dto.ownerId);
