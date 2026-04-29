@@ -46,6 +46,32 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
   });
 
   registry.registerPath({
+    method: 'delete',
+    path: '/weatherStations/{id}',
+    summary: 'Delete a weather station',
+    description: 'Permanently removes a weather station. Fails if the station has associated climate measurements.',
+    tags: [weatherStationTag.name],
+    request: {
+      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
+    },
+    responses: {
+      204: { description: 'Weather station deleted successfully.' },
+      400: {
+        description: 'The provided id is not a valid UUID.',
+        content: { 'application/json': { schema: errorResponse('Invalid id format — must be a UUID') } },
+      },
+      404: {
+        description: 'Weather station not found.',
+        content: { 'application/json': { schema: errorResponse('Weather station not found') } },
+      },
+      409: {
+        description: 'Weather station has associated measurements and cannot be deleted.',
+        content: { 'application/json': { schema: errorResponse('Weather station has associated measurements and cannot be deleted') } },
+      },
+    },
+  });
+
+  registry.registerPath({
     method: 'patch',
     path: '/weatherStations/{id}',
     summary: 'Update a weather station',

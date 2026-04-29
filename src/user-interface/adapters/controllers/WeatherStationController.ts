@@ -61,6 +61,20 @@ export class WeatherStationController {
     }
   }
 
+  async deleteStation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!UuidSchema.safeParse(id).success) {
+        res.status(400).json({ message: 'Invalid id format — must be a UUID' });
+        return;
+      }
+      await this.weatherStationService.deleteStation(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async createWeatherStation(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const parsed = CreateWeatherStationSchema.safeParse(req.body);

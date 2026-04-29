@@ -7,4 +7,5 @@ export interface WeatherStationPort {
   updateWeatherStation(id: string, dto: UpdateWeatherStationRequest): Promise<WeatherStation>;
   getStationById(id: string): Promise<WeatherStation | null>;
   getAllStations(): Promise<WeatherStation[]>;
+  deleteStation(id: string): Promise<void>;
 }
