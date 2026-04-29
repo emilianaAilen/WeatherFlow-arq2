@@ -46,6 +46,22 @@ export class UserService implements UserPort {
     return updated;
   }
 
+  async deleteUser(id: string): Promise<void> {
+    const existing = await this.userRepository.findById(id);
+    if (!existing) {
+      const error = new Error('User not found');
+      (error as any).statusCode = 404;
+      throw error;
+    }
+    const ownedStation = await this.weatherStationRepository.findStationByOwner(id);
+    if (ownedStation) {
+      const error = new Error('User owns one or more weather stations and cannot be deleted');
+      (error as any).statusCode = 409;
+      throw error;
+    }
+    await this.userRepository.remove(id);
+  }
+
   async createUser(dto: CreateUserRequest): Promise<User> {
     const existing = await this.userRepository.findByEmail(dto.email);
     if (existing) {

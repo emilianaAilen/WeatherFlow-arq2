@@ -19,8 +19,8 @@ router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
   userController.updateUser(req, res, next),
 );
 
-router.delete('/:userId', (_req: Request, res: Response) => {
-  res.status(204).send();
-});
+router.delete('/:id', (req: Request, res: Response, next: NextFunction) =>
+  userController.deleteUser(req, res, next),
+);
 
 export default router;
