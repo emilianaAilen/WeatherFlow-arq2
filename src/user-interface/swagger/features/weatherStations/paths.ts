@@ -1,10 +1,50 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
+import { z } from 'zod';
 import { CreateWeatherStationRequestSchema, UpdateWeatherStationRequestSchema, WeatherStationResponseSchema } from './schemas';
 import { errorResponse, validationErrorResponse } from '../../shared/responses';
 
 export const weatherStationTag = { name: 'Weather Stations', description: 'Weather station management' };
 
 export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
+  registry.registerPath({
+    method: 'get',
+    path: '/weatherStations',
+    summary: 'List all weather stations',
+    description: 'Returns the full list of registered weather stations.',
+    tags: [weatherStationTag.name],
+    responses: {
+      200: {
+        description: 'Weather stations retrieved successfully.',
+        content: { 'application/json': { schema: z.array(WeatherStationResponseSchema) } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/weatherStations/{id}',
+    summary: 'Get a weather station by ID',
+    description: 'Returns a single weather station matching the provided UUID.',
+    tags: [weatherStationTag.name],
+    request: {
+      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
+    },
+    responses: {
+      200: {
+        description: 'Weather station found.',
+        content: { 'application/json': { schema: WeatherStationResponseSchema } },
+      },
+      400: {
+        description: 'The provided id is not a valid UUID.',
+        content: { 'application/json': { schema: errorResponse('Invalid id format — must be a UUID') } },
+      },
+      404: {
+        description: 'No weather station exists with the given id.',
+        content: { 'application/json': { schema: errorResponse('Weather station not found') } },
+      },
+    },
+  });
+
   registry.registerPath({
     method: 'patch',
     path: '/weatherStations/{id}',
