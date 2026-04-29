@@ -1,4 +1,5 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import { weatherStationController } from '@/infrastructure/container';
 
 const router = Router();
 
@@ -6,9 +7,9 @@ router.get('/', (req: Request, res: Response) => {
   res.status(200).json({ message: 'Get all weather stations' });
 });
 
-router.post('/', (req: Request, res: Response) => {
-  res.status(201).json({ message: 'Create a new weather station' });
-});
+router.post('/', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.createWeatherStation(req, res, next),
+);
 
 router.get('/:stationId', (req: Request, res: Response) => {
   res.status(200).json({ message: `Get weather station ${req.params.stationId}` });
