@@ -4,6 +4,7 @@ import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
 import { UserPort } from '@/user-interface/ports/UserPort';
 import { CreateUserRequest } from '@/user-interface/dtos/CreateUserDTO';
+import { UpdateUserRequest } from '@/user-interface/dtos/UpdateUserDTO';
 
 export class UserService implements UserPort {
   constructor(
@@ -17,6 +18,32 @@ export class UserService implements UserPort {
 
   async getAllUsers(): Promise<User[]> {
     return this.userRepository.getAll();
+  }
+
+  async updateUser(id: string, dto: UpdateUserRequest): Promise<User> {
+    const existing = await this.userRepository.findById(id);
+    if (!existing) {
+      const error = new Error('User not found');
+      (error as any).statusCode = 404;
+      throw error;
+    }
+    if (dto.email && dto.email !== existing.email) {
+      const emailTaken = await this.userRepository.findByEmail(dto.email);
+      if (emailTaken) {
+        const error = new Error('User with given email already exists');
+        (error as any).statusCode = 409;
+        throw error;
+      }
+    }
+    const updated = User.create(
+      existing.id,
+      dto.name ?? existing.name,
+      dto.surname ?? existing.surname,
+      dto.email ?? existing.email,
+      existing.subscriptions,
+    );
+    await this.userRepository.update(id, updated);
+    return updated;
   }
 
   async createUser(dto: CreateUserRequest): Promise<User> {
