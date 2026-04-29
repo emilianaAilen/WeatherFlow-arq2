@@ -36,6 +36,19 @@ export class ClimateMeasurementRepository implements IClimateMeasurementReposito
     return doc ? this.toDomain(doc) : null;
   }
 
+  async update(id: string, measurement: ClimateMeasurement): Promise<void> {
+    await ClimateMeasurementModel.findByIdAndUpdate(id, {
+      temperature: measurement.temperature.value,
+      humidity: measurement.humidity.value,
+      atmosphericPressure: measurement.atmosphericPressure.value,
+      dateTime: measurement.dateTime,
+      alert: {
+        status: measurement.alert.isActiveAlert(),
+        type: measurement.alert.getType(),
+      },
+    }).exec();
+  }
+
   async findByStationId(stationId: string): Promise<ClimateMeasurement | null> {
     const doc = await ClimateMeasurementModel.findOne({ stationId }).exec();
     return doc ? this.toDomain(doc) : null;
