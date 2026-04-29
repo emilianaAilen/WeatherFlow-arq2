@@ -7,6 +7,28 @@ export const measurementTag = { name: 'Measurements', description: 'Climate meas
 
 export function registerMeasurementPaths(registry: OpenAPIRegistry): void {
   registry.registerPath({
+    method: 'delete',
+    path: '/measurements/{id}',
+    summary: 'Delete a climate measurement',
+    description: 'Permanently removes a climate measurement by ID.',
+    tags: [measurementTag.name],
+    request: {
+      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
+    },
+    responses: {
+      204: { description: 'Measurement deleted successfully.' },
+      400: {
+        description: 'The provided id is not a valid UUID.',
+        content: { 'application/json': { schema: errorResponse('Invalid id format — must be a UUID') } },
+      },
+      404: {
+        description: 'No climate measurement exists with the given id.',
+        content: { 'application/json': { schema: errorResponse('Climate measurement not found') } },
+      },
+    },
+  });
+
+  registry.registerPath({
     method: 'get',
     path: '/measurements/{id}',
     summary: 'Get a climate measurement by ID',

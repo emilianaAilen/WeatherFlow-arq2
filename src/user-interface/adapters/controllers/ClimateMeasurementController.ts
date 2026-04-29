@@ -9,6 +9,20 @@ const UuidSchema = z.uuid();
 export class ClimateMeasurementController {
   constructor(private readonly climateMeasurementService: ClimateMeasurementPort) {}
 
+  async deleteMeasurement(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!UuidSchema.safeParse(id).success) {
+        res.status(400).json({ message: 'Invalid id format — must be a UUID' });
+        return;
+      }
+      await this.climateMeasurementService.deleteMeasurement(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getMeasurementById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
