@@ -11,9 +11,9 @@ router.post('/', (req: Request, res: Response, next: NextFunction) =>
   measurementController.createMeasurement(req, res, next),
 );
 
-router.get('/:measurementId', (req: Request, res: Response) => {
-  res.status(200).json({ message: `Get measurement ${req.params.measurementId}` });
-});
+router.get('/:id', (req: Request, res: Response, next: NextFunction) =>
+  measurementController.getMeasurementById(req, res, next),
+);
 
 router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
   measurementController.updateMeasurement(req, res, next),
