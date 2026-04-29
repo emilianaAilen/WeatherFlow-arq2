@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 import { AlertType } from '@/domain';
 
 export interface IClimateMeasurementDocument extends Document {
-  _id: mongoose.Types.ObjectId;
+  _id: string;
   temperature: number;
   humidity: number;
   atmosphericPressure: number;
@@ -18,6 +18,7 @@ export interface IClimateMeasurementDocument extends Document {
 
 const climateMeasurementSchema = new Schema<IClimateMeasurementDocument>(
   {
+    _id: { type: String },
     temperature: { type: Number, required: true },
     humidity: { type: Number, required: true },
     atmosphericPressure: { type: Number, required: true },

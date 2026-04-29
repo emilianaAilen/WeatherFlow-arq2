@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 import { StationStatusType } from '@/domain';
 
 export interface IWeatherStationDocument extends Document {
-  _id: mongoose.Types.ObjectId;
+  _id: string;
   name: string;
   location: {
     latitude: number;
@@ -17,6 +17,7 @@ export interface IWeatherStationDocument extends Document {
 
 const weatherStationSchema = new Schema<IWeatherStationDocument>(
   {
+    _id: { type: String },
     name: { type: String, required: true },
     location: {
       latitude: { type: Number, required: true },
