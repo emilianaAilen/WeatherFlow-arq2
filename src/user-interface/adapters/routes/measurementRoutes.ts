@@ -19,8 +19,8 @@ router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
   measurementController.updateMeasurement(req, res, next),
 );
 
-router.delete('/:measurementId', (req: Request, res: Response) => {
-  res.status(204).send();
-});
+router.delete('/:id', (req: Request, res: Response, next: NextFunction) =>
+  measurementController.deleteMeasurement(req, res, next),
+);
 
 export default router;

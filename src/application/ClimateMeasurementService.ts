@@ -16,6 +16,16 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
     return this.climateMeasurementRepository.findById(id);
   }
 
+  async deleteMeasurement(id: string): Promise<void> {
+    const existing = await this.climateMeasurementRepository.findById(id);
+    if (!existing) {
+      const error = new Error('Climate measurement not found');
+      (error as any).statusCode = 404;
+      throw error;
+    }
+    await this.climateMeasurementRepository.remove(id);
+  }
+
   async updateMeasurement(id: string, dto: UpdateMeasurementRequest): Promise<ClimateMeasurement> {
     const existing = await this.climateMeasurementRepository.findById(id);
     if (!existing) {
