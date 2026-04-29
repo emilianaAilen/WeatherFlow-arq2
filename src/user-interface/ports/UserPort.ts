@@ -7,4 +7,5 @@ export interface UserPort {
   getUserById(id: string): Promise<User | null>;
   getAllUsers(): Promise<User[]>;
   updateUser(id: string, dto: UpdateUserRequest): Promise<User>;
+  deleteUser(id: string): Promise<void>;
 }

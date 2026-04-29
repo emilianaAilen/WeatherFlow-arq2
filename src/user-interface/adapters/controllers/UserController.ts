@@ -61,6 +61,20 @@ export class UserController {
     }
   }
 
+  async deleteUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!UuidSchema.safeParse(id).success) {
+        res.status(400).json({ message: 'Invalid id format — must be a UUID' });
+        return;
+      }
+      await this.userService.deleteUser(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async createUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const parsed = CreateUserSchema.safeParse(req.body);

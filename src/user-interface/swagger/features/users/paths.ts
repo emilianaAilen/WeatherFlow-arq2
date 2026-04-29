@@ -79,6 +79,32 @@ export function registerUserPaths(registry: OpenAPIRegistry): void {
   });
 
   registry.registerPath({
+    method: 'delete',
+    path: '/users/{id}',
+    summary: 'Delete a user',
+    description: 'Permanently removes a user by ID.',
+    tags: [userTag.name],
+    request: {
+      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
+    },
+    responses: {
+      204: { description: 'User deleted successfully.' },
+      400: {
+        description: 'The provided id is not a valid UUID.',
+        content: { 'application/json': { schema: ErrorResponseSchema } },
+      },
+      404: {
+        description: 'No user exists with the given id.',
+        content: { 'application/json': { schema: ErrorResponseSchema } },
+      },
+      409: {
+        description: 'User owns one or more weather stations and cannot be deleted.',
+        content: { 'application/json': { schema: ErrorResponseSchema } },
+      },
+    },
+  });
+
+  registry.registerPath({
     method: 'post',
     path: '/users',
     summary: 'Create a new user',
