@@ -9,6 +9,24 @@ const UuidSchema = z.uuid();
 export class ClimateMeasurementController {
   constructor(private readonly climateMeasurementService: ClimateMeasurementPort) {}
 
+  async getMeasurementById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!UuidSchema.safeParse(id).success) {
+        res.status(400).json({ message: 'Invalid id format — must be a UUID' });
+        return;
+      }
+      const measurement = await this.climateMeasurementService.getMeasurementById(id);
+      if (!measurement) {
+        res.status(404).json({ message: 'Climate measurement not found' });
+        return;
+      }
+      res.status(200).json(measurement);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async updateMeasurement(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;

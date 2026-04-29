@@ -12,6 +12,10 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
     private readonly weatherStationRepository: IWeatherStationRepository,
   ) {}
 
+  async getMeasurementById(id: string): Promise<ClimateMeasurement | null> {
+    return this.climateMeasurementRepository.findById(id);
+  }
+
   async updateMeasurement(id: string, dto: UpdateMeasurementRequest): Promise<ClimateMeasurement> {
     const existing = await this.climateMeasurementRepository.findById(id);
     if (!existing) {
