@@ -12,6 +12,14 @@ export const CreateMeasurementRequestSchema = z
   })
   .openapi('CreateMeasurementRequest');
 
+export const UpdateMeasurementRequestSchema = z
+  .object({
+    temperature: z.number().optional().openapi({ example: 30.1, description: 'Temperature in °C' }),
+    humidity: z.number().optional().openapi({ example: 75, description: 'Relative humidity in %' }),
+    atmosphericPressure: z.number().optional().openapi({ example: 1005, description: 'Atmospheric pressure in hPa' }),
+  })
+  .openapi('UpdateMeasurementRequest');
+
 export const ClimateMeasurementResponseSchema = z
   .object({
     id: z.string().openapi({ example: '64b1f2c3e4b0a1b2c3d4e5f6', description: 'Measurement ID' }),

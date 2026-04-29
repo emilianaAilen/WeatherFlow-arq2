@@ -15,9 +15,9 @@ router.get('/:measurementId', (req: Request, res: Response) => {
   res.status(200).json({ message: `Get measurement ${req.params.measurementId}` });
 });
 
-router.patch('/:measurementId', (req: Request, res: Response) => {
-  res.status(200).json({ message: `Update measurement ${req.params.measurementId}` });
-});
+router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
+  measurementController.updateMeasurement(req, res, next),
+);
 
 router.delete('/:measurementId', (req: Request, res: Response) => {
   res.status(204).send();
