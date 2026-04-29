@@ -15,9 +15,9 @@ router.get('/:id', (req: Request, res: Response, next: NextFunction) =>
   userController.getUserById(req, res, next),
 );
 
-router.patch('/:userId', (req: Request, res: Response) => {
-  res.status(200).json({ message: `Update user ${req.params.userId}` });
-});
+router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
+  userController.updateUser(req, res, next),
+);
 
 router.delete('/:userId', (_req: Request, res: Response) => {
   res.status(204).send();

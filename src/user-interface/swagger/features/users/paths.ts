@@ -1,6 +1,6 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
-import { CreateUserRequestSchema, UserResponseSchema } from './schemas';
+import { CreateUserRequestSchema, UpdateUserRequestSchema, UserResponseSchema } from './schemas';
 import { ErrorResponseSchema, ValidationErrorSchema } from '../../shared/responses';
 
 export const userTag = { name: 'Users', description: 'User account management' };
@@ -40,6 +40,39 @@ export function registerUserPaths(registry: OpenAPIRegistry): void {
       },
       404: {
         description: 'No user exists with the given id.',
+        content: { 'application/json': { schema: ErrorResponseSchema } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'patch',
+    path: '/users/{id}',
+    summary: 'Update a user',
+    description: 'Partially updates a user. At least one field must be provided. Email must remain unique.',
+    tags: [userTag.name],
+    request: {
+      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
+      body: {
+        required: true,
+        content: { 'application/json': { schema: UpdateUserRequestSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: 'User updated successfully.',
+        content: { 'application/json': { schema: UserResponseSchema } },
+      },
+      400: {
+        description: 'Invalid UUID or request body failed validation.',
+        content: { 'application/json': { schema: ValidationErrorSchema } },
+      },
+      404: {
+        description: 'No user exists with the given id.',
+        content: { 'application/json': { schema: ErrorResponseSchema } },
+      },
+      409: {
+        description: 'A user with the provided email already exists.',
         content: { 'application/json': { schema: ErrorResponseSchema } },
       },
     },
