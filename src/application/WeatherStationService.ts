@@ -12,6 +12,14 @@ export class WeatherStationService implements WeatherStationPort {
     private readonly userRepository: IUserRepository,
   ) {}
 
+  async getStationById(id: string): Promise<WeatherStation | null> {
+    return this.weatherStationRepository.findById(id);
+  }
+
+  async getAllStations(): Promise<WeatherStation[]> {
+    return this.weatherStationRepository.getAll();
+  }
+
   async updateWeatherStation(id: string, dto: UpdateWeatherStationRequest): Promise<WeatherStation> {
     const existing = await this.weatherStationRepository.findById(id);
     if (!existing) {

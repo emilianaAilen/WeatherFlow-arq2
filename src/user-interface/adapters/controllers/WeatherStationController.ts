@@ -9,6 +9,33 @@ const UuidSchema = z.uuid();
 export class WeatherStationController {
   constructor(private readonly weatherStationService: WeatherStationPort) {}
 
+  async getAllStations(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const stations = await this.weatherStationService.getAllStations();
+      res.status(200).json(stations);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getStationById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!UuidSchema.safeParse(id).success) {
+        res.status(400).json({ message: 'Invalid id format — must be a UUID' });
+        return;
+      }
+      const station = await this.weatherStationService.getStationById(id);
+      if (!station) {
+        res.status(404).json({ message: 'Weather station not found' });
+        return;
+      }
+      res.status(200).json(station);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async updateWeatherStation(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;

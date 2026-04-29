@@ -5,4 +5,6 @@ import { UpdateWeatherStationRequest } from '@/user-interface/dtos/UpdateWeather
 export interface WeatherStationPort {
   createWeatherStation(dto: CreateWeatherStationRequest): Promise<WeatherStation>;
   updateWeatherStation(id: string, dto: UpdateWeatherStationRequest): Promise<WeatherStation>;
+  getStationById(id: string): Promise<WeatherStation | null>;
+  getAllStations(): Promise<WeatherStation[]>;
 }
