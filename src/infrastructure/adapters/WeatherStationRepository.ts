@@ -16,6 +16,7 @@ export class WeatherStationRepository implements IWeatherStationRepository {
 
   async save(station: WeatherStation): Promise<void> {
     await WeatherStationModel.create({
+      _id: station.id,
       name: station.name,
       location: {
         latitude: station.location.getLatitude(),
