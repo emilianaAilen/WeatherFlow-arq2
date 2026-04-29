@@ -1,9 +1,39 @@
 import { NextFunction, Request, Response } from 'express';
+import { z } from 'zod';
 import { UserPort } from '@/user-interface/ports/UserPort';
 import { CreateUserSchema } from '@/user-interface/dtos/CreateUserDTO';
 
+const UuidSchema = z.uuid();
+
 export class UserController {
   constructor(private readonly userService: UserPort) {}
+
+  async getAllUsers(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const users = await this.userService.getAllUsers();
+      res.status(200).json(users);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!UuidSchema.safeParse(id).success) {
+        res.status(400).json({ message: 'Invalid id format — must be a UUID' });
+        return;
+      }
+      const user = await this.userService.getUserById(id);
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+      res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  }
 
   async createUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

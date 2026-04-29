@@ -11,6 +11,14 @@ export class UserService implements UserPort {
     private readonly weatherStationRepository: IWeatherStationRepository,
   ) {}
 
+  async getUserById(id: string): Promise<User | null> {
+    return this.userRepository.findById(id);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return this.userRepository.getAll();
+  }
+
   async createUser(dto: CreateUserRequest): Promise<User> {
     const existing = await this.userRepository.findByEmail(dto.email);
     if (existing) {
