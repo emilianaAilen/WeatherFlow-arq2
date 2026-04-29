@@ -16,7 +16,7 @@ const userSchema = new Schema<IUserDocument>(
     name: { type: String, required: true },
     surname: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    subscriptions: [{ type: Schema.Types.ObjectId, ref: 'WeatherStation' }],
+    subscriptions: [{ type: String, ref: 'WeatherStation' }],
   },
   { timestamps: true }
 );

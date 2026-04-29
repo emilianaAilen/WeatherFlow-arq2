@@ -10,7 +10,7 @@ export interface IWeatherStationDocument extends Document {
   };
   sensorModel: string;
   status: StationStatusType;
-  ownerId: mongoose.Types.ObjectId;
+  ownerId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,7 +25,7 @@ const weatherStationSchema = new Schema<IWeatherStationDocument>(
     },
     sensorModel: { type: String, required: true },
     status: { type: String, enum: Object.values(StationStatusType), required: true },
-    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    ownerId: { type: String, ref: 'User', required: true },
   },
   { timestamps: true }
 );

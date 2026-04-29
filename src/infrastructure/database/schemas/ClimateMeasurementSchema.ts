@@ -11,7 +11,7 @@ export interface IClimateMeasurementDocument extends Document {
     status: boolean;
     type: AlertType;
   };
-  stationId: mongoose.Types.ObjectId;
+  stationId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,7 +27,7 @@ const climateMeasurementSchema = new Schema<IClimateMeasurementDocument>(
       status: { type: Boolean, required: true },
       type: { type: String, enum: Object.values(AlertType), required: true },
     },
-    stationId: { type: Schema.Types.ObjectId, ref: 'WeatherStation', required: true },
+    stationId: { type: String, ref: 'WeatherStation', required: true },
   },
   { timestamps: true }
 );
