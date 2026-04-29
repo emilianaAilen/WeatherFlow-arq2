@@ -1,7 +1,9 @@
 import 'dotenv/config';
-import express, { Express } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
+import swaggerUi from 'swagger-ui-express';
 import { MongoDBConnection } from '@/infrastructure/database';
 import { userRoutes, weatherStationRoutes, measurementRoutes } from '@/user-interface/adapters';
+import { generateOpenApiDocument } from '@/user-interface/swagger';
 
 class App {
   private app: Express;
@@ -20,12 +22,22 @@ class App {
   }
 
   private setupRoutes(): void {
+    const swaggerDocument = generateOpenApiDocument();
+
+    this.app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    this.app.get('/docs.json', (_req: Request, res: Response) => res.json(swaggerDocument));
+
     this.app.use('/users', userRoutes);
     this.app.use('/weatherStations', weatherStationRoutes);
     this.app.use('/measurements', measurementRoutes);
 
-    this.app.get('/health', (req, res) => {
+    this.app.get('/health', (_req: Request, res: Response) => {
       res.json({ status: 'OK', message: 'WeatherFlow API is running' });
+    });
+
+    this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status: number = err.statusCode || err.status || 500;
+      res.status(status).json({ message: err.message || 'Internal Server Error' });
     });
   }
 
@@ -34,6 +46,8 @@ class App {
       await MongoDBConnection.connect();
       this.app.listen(this.port, () => {
         console.log(`WeatherFlow API running on port ${this.port}`);
+        console.log(`Swagger UI:   http://localhost:${this.port}/docs`);
+        console.log(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
       });
     } catch (error) {
       console.error('Failed to start application:', error);
