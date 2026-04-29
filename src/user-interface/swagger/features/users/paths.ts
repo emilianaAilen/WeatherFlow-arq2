@@ -57,11 +57,11 @@ export function registerUserPaths(registry: OpenAPIRegistry): void {
       },
       400: {
         description: "The provided id is not a valid UUID.",
-        content: { "application/json": { schema: ErrorResponseSchema } },
+        content: { "application/json": { schema: errorResponse("Invalid UUID format") } },
       },
       404: {
         description: "No user exists with the given id.",
-        content: { "application/json": { schema: ErrorResponseSchema } },
+        content: { "application/json": { schema: errorResponse("User not found") } },
       },
     },
   });
@@ -95,7 +95,7 @@ export function registerUserPaths(registry: OpenAPIRegistry): void {
       },
       404: {
         description: "No user exists with the given id.",
-        content: { "application/json": { schema: ErrorResponseSchema } },
+        content: { "application/json": { schema: errorResponse("User not found") } },
       },
       409: {
         description: "A user with the provided email already exists.",
@@ -121,16 +121,16 @@ export function registerUserPaths(registry: OpenAPIRegistry): void {
       204: { description: "User deleted successfully." },
       400: {
         description: "The provided id is not a valid UUID.",
-        content: { "application/json": { schema: ErrorResponseSchema } },
+        content: { "application/json": { schema: errorResponse("Invalid UUID format") } },
       },
       404: {
         description: "No user exists with the given id.",
-        content: { "application/json": { schema: ErrorResponseSchema } },
+        content: { "application/json": { schema: errorResponse("User not found") } },
       },
       409: {
         description:
           "User owns one or more weather stations and cannot be deleted.",
-        content: { "application/json": { schema: ErrorResponseSchema } },
+        content: { "application/json": { schema: errorResponse("User has associated weather stations") } },
       },
     },
   });
