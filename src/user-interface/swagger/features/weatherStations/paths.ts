@@ -78,6 +78,7 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
     description: 'Partially updates a weather station. At least one field must be provided. Name must remain unique.',
     tags: [weatherStationTag.name],
     request: {
+      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
       body: {
         required: true,
         content: { 'application/json': { schema: UpdateWeatherStationRequestSchema } },

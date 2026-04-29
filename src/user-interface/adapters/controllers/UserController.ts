@@ -89,12 +89,7 @@ export class UserController {
         return;
       }
       const user = await this.userService.createUser(parsed.data);
-      res.status(201).json({
-        id: user.id,
-        name: user.name,
-        surname: user.surname,
-        email: user.email,
-      });
+      res.status(201).json(user);
     } catch (error) {
       next(error);
     }

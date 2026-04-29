@@ -19,6 +19,7 @@ export class ClimateMeasurementRepository implements IClimateMeasurementReposito
 
   async save(measurement: ClimateMeasurement): Promise<void> {
     await ClimateMeasurementModel.create({
+      _id: measurement.id,
       temperature: measurement.temperature.value,
       humidity: measurement.humidity.value,
       atmosphericPressure: measurement.atmosphericPressure.value,
