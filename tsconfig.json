@@ -16,10 +16,11 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
+    "types": ["jest", "node"],
     "paths": {
       "@/*": ["./src/*"],
     }
   },
-  "include": ["src"],
+  "include": ["src", "**/*.test.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

@@ -1,25 +1,26 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import { userController } from '@/infrastructure/container';
 
 const router = Router();
 
-router.get('/', (req: Request, res: Response) => {
-  res.status(200).json({ message: 'Get all users' });
-});
+router.post('/', (req: Request, res: Response, next: NextFunction) =>
+  userController.createUser(req, res, next),
+);
 
-router.post('/', (req: Request, res: Response) => {
-  res.status(201).json({ message: 'Create a new user' });
-});
+router.get('/', (req: Request, res: Response, next: NextFunction) =>
+  userController.getAllUsers(req, res, next),
+);
 
-router.get('/:userId', (req: Request, res: Response) => {
-  res.status(200).json({ message: `Get user ${req.params.userId}` });
-});
+router.get('/:id', (req: Request, res: Response, next: NextFunction) =>
+  userController.getUserById(req, res, next),
+);
 
-router.patch('/:userId', (req: Request, res: Response) => {
-  res.status(200).json({ message: `Update user ${req.params.userId}` });
-});
+router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
+  userController.updateUser(req, res, next),
+);
 
-router.delete('/:userId', (req: Request, res: Response) => {
-  res.status(204).send();
-});
+router.delete('/:id', (req: Request, res: Response, next: NextFunction) =>
+  userController.deleteUser(req, res, next),
+);
 
 export default router;

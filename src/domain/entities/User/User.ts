@@ -1,4 +1,4 @@
-import { SubscriptionsList } from '../value-objects/SubscriptionsList';
+import { SubscriptionsList } from '../../value-objects/SubscriptionsList';
 
 export class User {
   readonly id: string;

@@ -13,13 +13,11 @@ export class Temperature {
     return this.value;
   }
 
-  // TODO: Implement logic to determine if temperature is extreme heat based on value
   isExtremeHeat(): boolean {
-    return false;
+    return this.value > 40;
   }
 
-  // TODO: Implement logic to determine if temperature is frost based on value
   isFrost(): boolean {
-    return false;
+    return this.value < 0;
   }
 }

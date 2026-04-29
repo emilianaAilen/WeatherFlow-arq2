@@ -13,8 +13,7 @@ export class Pressure {
     return this.value;
   }
 
-  // TODO: Implement logic to determine if pressure is low based on value
   isLowPressure(): boolean {
-    return false;
+    return this.value < 980;
   }
 }

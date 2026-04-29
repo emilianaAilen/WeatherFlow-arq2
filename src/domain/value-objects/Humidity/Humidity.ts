@@ -13,8 +13,7 @@ export class Humidity {
     return this.value;
   }
 
-  // TODO: Implement logic to determine if humidity is critical based on value
   isCritical(): boolean {
-    return false;
+    return this.value > 90;
   }
 }

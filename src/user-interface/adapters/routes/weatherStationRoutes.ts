@@ -1,25 +1,26 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import { weatherStationController } from '@/infrastructure/container';
 
 const router = Router();
 
-router.get('/', (req: Request, res: Response) => {
-  res.status(200).json({ message: 'Get all weather stations' });
-});
+router.get('/', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.getAllStations(req, res, next),
+);
 
-router.post('/', (req: Request, res: Response) => {
-  res.status(201).json({ message: 'Create a new weather station' });
-});
+router.post('/', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.createWeatherStation(req, res, next),
+);
 
-router.get('/:stationId', (req: Request, res: Response) => {
-  res.status(200).json({ message: `Get weather station ${req.params.stationId}` });
-});
+router.get('/:id', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.getStationById(req, res, next),
+);
 
-router.patch('/:stationId', (req: Request, res: Response) => {
-  res.status(200).json({ message: `Update weather station ${req.params.stationId}` });
-});
+router.patch('/:id', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.updateWeatherStation(req, res, next),
+);
 
-router.delete('/:stationId', (req: Request, res: Response) => {
-  res.status(204).send();
-});
+router.delete('/:id', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.deleteStation(req, res, next),
+);
 
 export default router;
