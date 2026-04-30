@@ -1,3 +1,5 @@
+import { SubscriptionError } from '../../errors/SubscriptionError';
+
 export class SubscriptionsList {
   readonly stationIds: string[];
 
@@ -9,10 +11,11 @@ export class SubscriptionsList {
     return new SubscriptionsList(stationIds);
   }
 
-  add(stationId: string): void {
-    if (!this.stationIds.includes(stationId)) {
-      this.stationIds.push(stationId);
+  add(stationId: string): SubscriptionsList {
+    if (this.stationIds.includes(stationId)) {
+      throw new SubscriptionError('User is already subscribed to this weather station');
     }
+    return new SubscriptionsList([...this.stationIds, stationId]);
   }
 
   remove(stationId: string): void {

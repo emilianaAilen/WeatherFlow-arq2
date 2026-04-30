@@ -23,4 +23,8 @@ router.delete('/:id', (req: Request, res: Response, next: NextFunction) =>
   userController.deleteUser(req, res, next),
 );
 
+router.post('/:id/subscribe', (req: Request, res: Response, next: NextFunction) =>
+  userController.subscribe(req, res, next),
+);
+
 export default router;

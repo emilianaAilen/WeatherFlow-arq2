@@ -74,4 +74,21 @@ export class UserService implements UserPort {
     await this.userRepository.save(user);
     return user;
   }
+
+  async subscribe(id: string, stationId: string): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      const error = new Error('User not found');
+      (error as any).statusCode = 404;
+      throw error;
+    }
+    const station = await this.weatherStationRepository.findById(stationId);
+    if (!station) {
+      const error = new Error('Weather station not found');
+      (error as any).statusCode = 404;
+      throw error;
+    }
+    const updatedUser = user.subscribe(stationId);
+    await this.userRepository.update(id, updatedUser);
+  }
 }
