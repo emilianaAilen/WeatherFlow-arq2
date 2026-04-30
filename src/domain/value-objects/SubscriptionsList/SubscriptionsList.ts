@@ -1,4 +1,4 @@
-import { DomainError } from '../../errors/DomainError';
+import { SubscriptionError } from '../../errors/SubscriptionError';
 
 export class SubscriptionsList {
   readonly stationIds: string[];
@@ -13,7 +13,7 @@ export class SubscriptionsList {
 
   add(stationId: string): SubscriptionsList {
     if (this.stationIds.includes(stationId)) {
-      throw new DomainError('User is already subscribed to this weather station');
+      throw new SubscriptionError('User is already subscribed to this weather station');
     }
     return new SubscriptionsList([...this.stationIds, stationId]);
   }

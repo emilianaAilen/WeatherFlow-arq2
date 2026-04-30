@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import { User } from "./User";
 import { SubscriptionsList } from "../../value-objects/SubscriptionsList";
-import { DomainError } from "../../errors/DomainError";
+import { SubscriptionError } from "../../errors/SubscriptionError";
 
 describe("User", () => {
   describe("getFullName", () => {
@@ -56,7 +56,7 @@ describe("User", () => {
       expect(user.getSubscriptions().isSubscribed("station-1")).toBe(false);
     });
 
-    it("throws DomainError when the user is already subscribed", () => {
+    it("throws SubscriptionError when the user is already subscribed", () => {
       const user = User.create(
         "id-1",
         "Jane",
@@ -64,7 +64,7 @@ describe("User", () => {
         "jane@example.com",
         SubscriptionsList.create(["station-1"]),
       );
-      expect(() => user.subscribe("station-1")).toThrow(DomainError);
+      expect(() => user.subscribe("station-1")).toThrow(SubscriptionError);
     });
   });
 });

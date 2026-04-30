@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { SubscriptionsList } from "./SubscriptionsList";
-import { DomainError } from "../../errors/DomainError";
+import { SubscriptionError } from "../../errors/SubscriptionError";
 
 describe("SubscriptionsList", () => {
   describe("add", () => {
@@ -16,9 +16,9 @@ describe("SubscriptionsList", () => {
       expect(list.isSubscribed("station-1")).toBe(false);
     });
 
-    it("throws DomainError when adding a duplicate station ID", () => {
+    it("throws SubscriptionError when adding a duplicate station ID", () => {
       const list = SubscriptionsList.create(["station-1"]);
-      expect(() => list.add("station-1")).toThrow(DomainError);
+      expect(() => list.add("station-1")).toThrow(SubscriptionError);
     });
   });
 
