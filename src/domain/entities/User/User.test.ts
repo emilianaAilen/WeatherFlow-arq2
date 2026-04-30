@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import { User } from "./User";
 import { SubscriptionsList } from "../../value-objects/SubscriptionsList";
+import { DomainError } from "../../errors/DomainError";
 
 describe("User", () => {
   describe("getFullName", () => {
@@ -39,6 +40,31 @@ describe("User", () => {
         "station-1",
         "station-2",
       ]);
+    });
+  });
+
+  describe("subscribe", () => {
+    it("returns a new User with the station added to subscriptions", () => {
+      const user = User.create("id-1", "Jane", "Doe", "jane@example.com");
+      const updated = user.subscribe("station-1");
+      expect(updated.getSubscriptions().isSubscribed("station-1")).toBe(true);
+    });
+
+    it("does not mutate the original user", () => {
+      const user = User.create("id-1", "Jane", "Doe", "jane@example.com");
+      user.subscribe("station-1");
+      expect(user.getSubscriptions().isSubscribed("station-1")).toBe(false);
+    });
+
+    it("throws DomainError when the user is already subscribed", () => {
+      const user = User.create(
+        "id-1",
+        "Jane",
+        "Doe",
+        "jane@example.com",
+        SubscriptionsList.create(["station-1"]),
+      );
+      expect(() => user.subscribe("station-1")).toThrow(DomainError);
     });
   });
 });

@@ -30,3 +30,12 @@ export const UserResponseSchema = z
     email: z.email().openapi({ example: 'jane@example.com' }),
   })
   .openapi('UserResponse');
+
+export const SubscribeRequestSchema = z
+  .object({
+    weatherStationId: z.uuid().openapi({
+      example: '550e8400-e29b-41d4-a716-446655440000',
+      description: 'UUID of the weather station to subscribe to',
+    }),
+  })
+  .openapi('SubscribeRequest');

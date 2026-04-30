@@ -4,6 +4,7 @@ import swaggerUi from 'swagger-ui-express';
 import { MongoDBConnection } from '@/infrastructure/database';
 import { userRoutes, weatherStationRoutes, measurementRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
+import { DomainError } from '@/domain/errors/DomainError';
 
 class App {
   private app: Express;
@@ -36,6 +37,10 @@ class App {
     });
 
     this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      if (err instanceof DomainError) {
+        res.status(400).json({ message: err.message });
+        return;
+      }
       const status: number = err.statusCode || err.status || 500;
       res.status(status).json({ message: err.message || 'Internal Server Error' });
     });

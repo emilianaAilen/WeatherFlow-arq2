@@ -1,19 +1,24 @@
 import { describe, expect, it } from "@jest/globals";
 import { SubscriptionsList } from "./SubscriptionsList";
+import { DomainError } from "../../errors/DomainError";
 
 describe("SubscriptionsList", () => {
   describe("add", () => {
-    it("adds a station ID to the list", () => {
+    it("returns a new list with the station ID added", () => {
       const list = SubscriptionsList.create();
-      list.add("station-1");
-      expect(list.isSubscribed("station-1")).toBe(true);
+      const updated = list.add("station-1");
+      expect(updated.isSubscribed("station-1")).toBe(true);
     });
 
-    it("does not add duplicate station IDs", () => {
+    it("does not mutate the original list", () => {
       const list = SubscriptionsList.create();
       list.add("station-1");
-      list.add("station-1");
-      expect(list.stationIds.length).toBe(1);
+      expect(list.isSubscribed("station-1")).toBe(false);
+    });
+
+    it("throws DomainError when adding a duplicate station ID", () => {
+      const list = SubscriptionsList.create(["station-1"]);
+      expect(() => list.add("station-1")).toThrow(DomainError);
     });
   });
 
