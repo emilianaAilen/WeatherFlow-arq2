@@ -4,6 +4,7 @@ import {
   CreateUserRequestSchema,
   UpdateUserRequestSchema,
   UserResponseSchema,
+  SubscribeRequestSchema,
 } from "./schemas";
 import { errorResponse, validationErrorResponse } from "../../shared/responses";
 
@@ -131,6 +132,40 @@ export function registerUserPaths(registry: OpenAPIRegistry): void {
         description:
           "User owns one or more weather stations and cannot be deleted.",
         content: { "application/json": { schema: errorResponse("User has associated weather stations") } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/users/{id}/subscribe",
+    summary: "Subscribe to a weather station",
+    description: "Subscribes a user to the specified weather station. The user and station must both exist, and the user must not already be subscribed.",
+    tags: [userTag.name],
+    request: {
+      params: z.object({
+        id: z
+          .uuid()
+          .openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+      }),
+      body: {
+        required: true,
+        content: { "application/json": { schema: SubscribeRequestSchema } },
+      },
+    },
+    responses: {
+      204: { description: "Subscription created successfully." },
+      400: {
+        description: "Invalid UUID or request body failed validation.",
+        content: { "application/json": { schema: validationErrorResponse("weatherStationId", "Invalid weather station ID format") } },
+      },
+      404: {
+        description: "User or weather station not found.",
+        content: { "application/json": { schema: errorResponse("User not found") } },
+      },
+      409: {
+        description: "User is already subscribed to this weather station.",
+        content: { "application/json": { schema: errorResponse("User is already subscribed to this weather station") } },
       },
     },
   });

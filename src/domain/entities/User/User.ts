@@ -31,6 +31,11 @@ export class User {
     return new User(id, name, surname, email, subscriptions);
   }
 
+  subscribe(stationId: string): User {
+    const updatedSubscriptions = this.subscriptions.add(stationId);
+    return new User(this.id, this.name, this.surname, this.email, updatedSubscriptions);
+  }
+
   getFullName(): string {
     return `${this.name} ${this.surname}`;
   }
