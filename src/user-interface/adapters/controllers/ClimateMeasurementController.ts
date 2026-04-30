@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasurementPort';
 import { CreateMeasurementSchema } from '@/user-interface/dtos/CreateMeasurementDTO';
 import { UpdateMeasurementSchema } from '@/user-interface/dtos/UpdateMeasurementDTO';
+import { MeasurementFilters, MeasurementFiltersQuerySchema } from '@/user-interface/dtos/MeasurementFiltersDTO';
 
 const UuidSchema = z.uuid();
 
@@ -61,6 +62,32 @@ export class ClimateMeasurementController {
       }
       const measurement = await this.climateMeasurementService.updateMeasurement(id, parsed.data);
       res.status(200).json(measurement);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async search(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const parsed = MeasurementFiltersQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        res.status(400).json({
+          message: 'Validation failed',
+          errors: parsed.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+        return;
+      }
+      const filters: MeasurementFilters = {
+        stationName: parsed.data.station,
+        minTemperature: parsed.data.min_temperature,
+        maxTemperature: parsed.data.max_temperature,
+        isActiveAlert: parsed.data.alert_status,
+      };
+      const measurements = await this.climateMeasurementService.search(filters);
+      res.status(200).json(measurements);
     } catch (error) {
       next(error);
     }
