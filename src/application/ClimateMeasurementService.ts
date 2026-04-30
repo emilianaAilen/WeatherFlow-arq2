@@ -5,6 +5,8 @@ import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStatio
 import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasurementPort';
 import { CreateMeasurementRequest } from '@/user-interface/dtos/CreateMeasurementDTO';
 import { UpdateMeasurementRequest } from '@/user-interface/dtos/UpdateMeasurementDTO';
+import { MeasurementFilters } from '@/user-interface/dtos/MeasurementFiltersDTO';
+import { RepositoryMeasurementFilters } from '@/infrastructure/types';
 
 export class ClimateMeasurementService implements ClimateMeasurementPort {
   constructor(
@@ -43,6 +45,22 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
     );
     await this.climateMeasurementRepository.update(id, updated);
     return updated;
+  }
+
+  async search(filters: MeasurementFilters): Promise<ClimateMeasurement[]> {
+    const repoFilters: RepositoryMeasurementFilters = {
+      minTemperature: filters.minTemperature,
+      maxTemperature: filters.maxTemperature,
+      isActiveAlert: filters.isActiveAlert,
+    };
+
+    if (filters.stationName !== undefined) {
+      const station = await this.weatherStationRepository.findStationByName(filters.stationName);
+      if (!station) return [];
+      repoFilters.stationId = station.id;
+    }
+
+    return this.climateMeasurementRepository.filterMeasurementsBy(repoFilters);
   }
 
   async createMeasurement(dto: CreateMeasurementRequest): Promise<ClimateMeasurement> {

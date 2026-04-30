@@ -3,6 +3,10 @@ import { measurementController } from '@/infrastructure/container';
 
 const router = Router();
 
+router.get('/', (req: Request, res: Response, next: NextFunction) =>
+  measurementController.search(req, res, next),
+);
+
 router.post('/', (req: Request, res: Response, next: NextFunction) =>
   measurementController.createMeasurement(req, res, next),
 );

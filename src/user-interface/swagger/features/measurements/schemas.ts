@@ -20,6 +20,15 @@ export const UpdateMeasurementRequestSchema = z
   })
   .openapi('UpdateMeasurementRequest');
 
+export const MeasurementFiltersQuerySchema = z
+  .object({
+    station: z.string().optional().openapi({ example: 'station name', description: 'Exact station name (case-insensitive)' }),
+    min_temperature: z.number().optional().openapi({ example: 20, description: 'Minimum temperature in °C (inclusive)' }),
+    max_temperature: z.number().optional().openapi({ example: 35, description: 'Maximum temperature in °C (inclusive)' }),
+    alert_status: z.boolean().optional().openapi({ example: true, description: 'Filter by active alert status' }),
+  })
+  .openapi('MeasurementFiltersQuery');
+
 export const ClimateMeasurementResponseSchema = z
   .object({
     id: z.string().openapi({ example: '64b1f2c3e4b0a1b2c3d4e5f6', description: 'Measurement ID' }),
