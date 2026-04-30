@@ -56,7 +56,10 @@ export class WeatherStationRepository implements IWeatherStationRepository {
   }
 
   async findStationByName(name: string): Promise<WeatherStation | null> {
-    const doc = await WeatherStationModel.findOne({ name }).exec();
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const doc = await WeatherStationModel.findOne({
+      name: { $regex: `^${escaped}$`, $options: 'i' },
+    }).exec();
     return doc ? this.toDomain(doc) : null;
   }
 

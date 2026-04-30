@@ -1,4 +1,5 @@
 import { ClimateMeasurement } from '@/domain';
+import { RepositoryMeasurementFilters } from '../types';
 
 export interface IClimateMeasurementRepository {
   save(measurement: ClimateMeasurement): Promise<void>;
@@ -7,4 +8,5 @@ export interface IClimateMeasurementRepository {
   findByStationId(stationId: string): Promise<ClimateMeasurement | null>;
   remove(id: string): Promise<void>;
   getAll(): Promise<ClimateMeasurement[]>;
+  filterMeasurementsBy(filters: RepositoryMeasurementFilters): Promise<ClimateMeasurement[]>;
 }

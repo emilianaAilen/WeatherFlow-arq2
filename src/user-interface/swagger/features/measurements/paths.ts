@@ -1,11 +1,32 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
-import { CreateMeasurementRequestSchema, UpdateMeasurementRequestSchema, ClimateMeasurementResponseSchema } from './schemas';
+import { CreateMeasurementRequestSchema, UpdateMeasurementRequestSchema, ClimateMeasurementResponseSchema, MeasurementFiltersQuerySchema } from './schemas';
 import { errorResponse, validationErrorResponse } from '../../shared/responses';
 
 export const measurementTag = { name: 'Measurements', description: 'Climate measurement management' };
 
 export function registerMeasurementPaths(registry: OpenAPIRegistry): void {
+  registry.registerPath({
+    method: 'get',
+    path: '/measurements',
+    summary: 'Search measurements with optional filters',
+    description: 'Returns all climate measurements. Results can be narrowed by station name (exact, case-insensitive), temperature range, and alert status. All query parameters are optional.',
+    tags: [measurementTag.name],
+    request: {
+      query: MeasurementFiltersQuerySchema,
+    },
+    responses: {
+      200: {
+        description: 'Measurements retrieved successfully.',
+        content: { 'application/json': { schema: z.array(ClimateMeasurementResponseSchema) } },
+      },
+      400: {
+        description: 'One or more query parameters failed validation.',
+        content: { 'application/json': { schema: validationErrorResponse('alert_status', "Invalid enum value. Expected 'true' | 'false'") } },
+      },
+    },
+  });
+
   registry.registerPath({
     method: 'delete',
     path: '/measurements/{id}',

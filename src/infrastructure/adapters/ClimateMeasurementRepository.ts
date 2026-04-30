@@ -4,6 +4,7 @@ import {
   ClimateMeasurementModel,
   IClimateMeasurementDocument,
 } from '@/infrastructure/database/schemas/ClimateMeasurementSchema';
+import { RepositoryMeasurementFilters } from '../types';
 
 export class ClimateMeasurementRepository implements IClimateMeasurementRepository {
   private toDomain(doc: IClimateMeasurementDocument): ClimateMeasurement {
@@ -61,6 +62,28 @@ export class ClimateMeasurementRepository implements IClimateMeasurementReposito
 
   async getAll(): Promise<ClimateMeasurement[]> {
     const docs = await ClimateMeasurementModel.find().exec();
+    return docs.map(this.toDomain.bind(this));
+  }
+
+  async filterMeasurementsBy(filters: RepositoryMeasurementFilters): Promise<ClimateMeasurement[]> {
+    const query: Record<string, unknown> = {};
+
+    if (filters.stationId !== undefined) {
+      query.stationId = filters.stationId;
+    }
+
+    if (filters.minTemperature !== undefined || filters.maxTemperature !== undefined) {
+      const tempQuery: Record<string, number> = {};
+      if (filters.minTemperature !== undefined) tempQuery.$gte = filters.minTemperature;
+      if (filters.maxTemperature !== undefined) tempQuery.$lte = filters.maxTemperature;
+      query.temperature = tempQuery;
+    }
+
+    if (filters.isActiveAlert !== undefined) {
+      query['alert.status'] = filters.isActiveAlert;
+    }
+
+    const docs = await ClimateMeasurementModel.find(query).exec();
     return docs.map(this.toDomain.bind(this));
   }
 }
