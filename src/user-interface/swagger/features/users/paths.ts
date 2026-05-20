@@ -138,7 +138,7 @@ export function registerUserPaths(registry: OpenAPIRegistry): void {
 
   registry.registerPath({
     method: "post",
-    path: "/users/{id}/subscribe",
+    path: "/users/{id}/subscription",
     summary: "Subscribe to a weather station",
     description: "Subscribes a user to the specified weather station. The user and station must both exist, and the user must not already be subscribed.",
     tags: [userTag.name],
