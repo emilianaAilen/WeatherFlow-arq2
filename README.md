@@ -14,17 +14,57 @@ REST API for managing measuring stations and process climate data for later cons
 
 ```
 src/
-├── domain/
-│   ├── entities/           # Core business objects (User, WeatherStation, ClimateMeasurement)
-│   ├── value-objects/      # Immutable domain types (Temperature, Humidity, Pressure, Location, Alert, SubscriptionsList)
-│   └── types.ts            # Shared domain types
-├── infrastructure/
-│   └── database/
-│       ├── schemas/        # Mongoose schemas
-│       └── MongoDBConnection.ts
-└── user-interface/
-    └── adapters/
-        └── routes/         # Express route handlers (users, weatherStations, measurements)
+├── application/                        # Use cases / application services
+│   ├── ClimateMeasurementService.ts
+│   ├── UserService.ts
+│   └── WeatherStationService.ts
+├── domain/                             # Core business logic (no external dependencies)
+│   ├── entities/
+│   │   ├── ClimateMeasurement/
+│   │   ├── User/
+│   │   └── WeatherStation/
+│   ├── errors/
+│   │   └── SubscriptionError.ts
+│   ├── value-objects/
+│   │   ├── Alert/
+│   │   ├── Humidity/
+│   │   ├── Location/
+│   │   ├── Pressure/
+│   │   ├── SubscriptionsList/
+│   │   └── Temperature/
+│   └── types.ts
+├── infrastructure/                     # Driven adapters (DB, external services)
+│   ├── adapters/                       # Mongoose repository implementations
+│   │   ├── ClimateMeasurementRepository.ts
+│   │   ├── UserRepository.ts
+│   │   └── WeatherStationRepository.ts
+│   ├── database/
+│   │   ├── schemas/                    # Mongoose schemas
+│   │   └── MongoDBConnection.ts
+│   ├── ports/                          # Repository interfaces
+│   │   ├── IClimateMeasurementRepository.ts
+│   │   ├── IUserRepository.ts
+│   │   └── IWeatherStationRepository.ts
+│   ├── container.ts                    # Dependency injection
+│   └── types.ts
+├── user-interface/                     # Driving adapters (HTTP)
+│   ├── adapters/
+│   │   ├── controllers/                # Express controllers
+│   │   │   ├── ClimateMeasurementController.ts
+│   │   │   ├── UserController.ts
+│   │   │   └── WeatherStationController.ts
+│   │   └── routes/                     # Express route definitions
+│   │       ├── measurementRoutes.ts
+│   │       ├── userRoutes.ts
+│   │       └── weatherStationRoutes.ts
+│   ├── dtos/                           # Request/response shapes with Zod validation
+│   ├── ports/                          # Service interfaces for controllers
+│   └── swagger/                        # OpenAPI docs (zod-to-openapi)
+│       └── features/
+│           ├── measurements/
+│           ├── users/
+│           └── weatherStations/
+└── index.ts                            # App entry point
 ```
 
 ## Environment Variables
@@ -60,7 +100,7 @@ npm test
 # Install dependencies
 npm install
 
-# Start in development mode (with hot reload via ts-node)
+# Start in development mode
 npm run dev
 ```
 
