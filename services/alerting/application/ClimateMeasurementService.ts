@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { ClimateMeasurement } from '@/domain';
 import { IClimateMeasurementRepository } from '@/infrastructure/ports/IClimateMeasurementRepository';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
+import { INotificationQueue } from '@/infrastructure/ports/INotificationQueue';
 import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasurementPort';
 import { CreateMeasurementRequest } from '@/user-interface/dtos/CreateMeasurementDTO';
 import { UpdateMeasurementRequest } from '@/user-interface/dtos/UpdateMeasurementDTO';
@@ -12,6 +13,7 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
   constructor(
     private readonly climateMeasurementRepository: IClimateMeasurementRepository,
     private readonly weatherStationRepository: IWeatherStationRepository,
+    private readonly notificationQueue: INotificationQueue,
   ) {}
 
   async getMeasurementById(id: string): Promise<ClimateMeasurement | null> {
@@ -44,6 +46,9 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
       existing.stationId,
     );
     await this.climateMeasurementRepository.update(id, updated);
+    if (updated.alert.isActiveAlert()) {
+      await this.notificationQueue.publish(updated);
+    }
     return updated;
   }
 
@@ -80,6 +85,9 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
       dto.stationId,
     );
     await this.climateMeasurementRepository.save(measurement);
+    if (measurement.alert.isActiveAlert()) {
+      await this.notificationQueue.publish(measurement);
+    }
     return measurement;
   }
 }

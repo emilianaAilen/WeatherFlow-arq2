@@ -1,5 +1,5 @@
 import { UserController, WeatherStationController, ClimateMeasurementController } from "@/user-interface/adapters/controllers";
-import { UserRepository, WeatherStationRepository, ClimateMeasurementRepository } from "./adapters";
+import { UserRepository, WeatherStationRepository, ClimateMeasurementRepository, RabbitMQNotificationQueue } from "./adapters";
 import { UserService } from "@/application/UserService";
 import { WeatherStationService } from "@/application/WeatherStationService";
 import { ClimateMeasurementService } from "@/application/ClimateMeasurementService";
@@ -7,6 +7,9 @@ import { ClimateMeasurementService } from "@/application/ClimateMeasurementServi
 const userRepository = new UserRepository();
 const weatherStationRepository = new WeatherStationRepository();
 const climateMeasurementRepository = new ClimateMeasurementRepository();
+const notificationQueue = new RabbitMQNotificationQueue(
+  process.env.RABBITMQ_URL ?? 'amqp://localhost',
+);
 
 export const userController = new UserController(
   new UserService(userRepository, weatherStationRepository),
@@ -17,5 +20,5 @@ export const weatherStationController = new WeatherStationController(
 );
 
 export const measurementController = new ClimateMeasurementController(
-  new ClimateMeasurementService(climateMeasurementRepository, weatherStationRepository),
+  new ClimateMeasurementService(climateMeasurementRepository, weatherStationRepository, notificationQueue),
 );
