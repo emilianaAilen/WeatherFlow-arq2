@@ -1,15 +1,29 @@
 version: '3.8'
 
 services:
-  app:
+  api:
     build: .
-    container_name: weatherflow-app
+    container_name: weatherflow-api
     ports:
-      - "${PORT:-3000}:3000"
+      - "8080:3000"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       MONGODB_URI: ${MONGODB_URI}
       MONGODB_DB_NAME: ${MONGODB_DB_NAME:-weatherflow}
+    networks:
+      - weatherflow-network
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./UI
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    container_name: weatherflow-ui
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
     networks:
       - weatherflow-network
     restart: unless-stopped
