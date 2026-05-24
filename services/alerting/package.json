@@ -1,12 +1,12 @@
 {
-  "name": "weatherflow",
+  "name": "alerting",
   "version": "1.0.0",
-  "description": "Weather Flow API with hexagonal architecture",
+  "description": "Weather Flow - Alerting Service",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
-    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
+    "dev": "ts-node -r tsconfig-paths/register index.ts",
     "test": "jest"
   },
   "keywords": [
@@ -29,7 +29,7 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1"
+      "^@/(.*)$": "<rootDir>/$1"
     },
     "testMatch": [
       "**/*.test.ts"
