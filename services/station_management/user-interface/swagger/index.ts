@@ -27,7 +27,8 @@ export function generateOpenApiDocument() {
         "REST API for the WeatherFlow weather monitoring platform. Provides endpoints to manage users, weather stations, and climate measurements.",
     },
     servers: [
-      { url: "http://localhost:3000", description: "Local development server" },
+      { url: "/", description: "Default server (relative path)" },
+      { url: "http://localhost:3000", description: "Local development server (Host port)" },
     ],
     tags: [userTag, weatherStationTag, measurementTag],
   });
