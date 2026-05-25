@@ -21,6 +21,11 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # ==========================================
   # MICROSERVICIOS EN MODO DESARROLLO
@@ -39,8 +44,10 @@ services:
       - ./services/alerting/.env
     command: npm run dev
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   station_management:
     build:
@@ -56,7 +63,10 @@ services:
       - ./services/station_management/.env
     command: npm run dev
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   mongo_data_dev:
