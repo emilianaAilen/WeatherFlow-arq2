@@ -1,14 +1,12 @@
 import { WeatherStationService } from './WeatherStationService';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
 import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
-import { IClimateMeasurementRepository } from '@/infrastructure/ports/IClimateMeasurementRepository';
 import { IStationEventPublisher } from '@/infrastructure/ports/IStationEventPublisher';
 import { WeatherStation, User, Location, StationStatusType } from '@/domain';
 
 describe('WeatherStationService', () => {
   let weatherStationRepository: jest.Mocked<IWeatherStationRepository>;
   let userRepository: jest.Mocked<IUserRepository>;
-  let climateMeasurementRepository: jest.Mocked<IClimateMeasurementRepository>;
   let stationEventPublisher: jest.Mocked<IStationEventPublisher>;
   let service: WeatherStationService;
 
@@ -30,15 +28,6 @@ describe('WeatherStationService', () => {
       remove: jest.fn(),
       getAll: jest.fn(),
     };
-    climateMeasurementRepository = {
-      save: jest.fn(),
-      findById: jest.fn(),
-      update: jest.fn(),
-      remove: jest.fn(),
-      findByStationId: jest.fn(),
-      filterMeasurementsBy: jest.fn(),
-      getAll: jest.fn(),
-    };
     stationEventPublisher = {
       publishStationCreated: jest.fn(),
       publishStationUpdated: jest.fn(),
@@ -48,7 +37,6 @@ describe('WeatherStationService', () => {
     service = new WeatherStationService(
       weatherStationRepository,
       userRepository,
-      climateMeasurementRepository,
       stationEventPublisher
     );
   });
@@ -87,7 +75,6 @@ describe('WeatherStationService', () => {
   it('should delete a weather station and publish event', async () => {
     const existingStation = WeatherStation.create('station-id', 'Station Old', Location.create(0, 0), 'Model', StationStatusType.ACTIVE, 'owner-id');
     weatherStationRepository.findById.mockResolvedValue(existingStation);
-    climateMeasurementRepository.findByStationId.mockResolvedValue(null);
 
     await service.deleteStation('station-id');
 

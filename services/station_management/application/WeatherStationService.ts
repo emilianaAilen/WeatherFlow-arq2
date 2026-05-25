@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import { WeatherStation, Location, StationStatusType } from '@/domain';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
 import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
-import { IClimateMeasurementRepository } from '@/infrastructure/ports/IClimateMeasurementRepository';
 import { IStationEventPublisher } from '@/infrastructure/ports/IStationEventPublisher';
 import { WeatherStationPort } from '@/user-interface/ports/WeatherStationPort';
 import { CreateWeatherStationRequest } from '@/user-interface/dtos/CreateWeatherStationDTO';
@@ -12,7 +11,6 @@ export class WeatherStationService implements WeatherStationPort {
   constructor(
     private readonly weatherStationRepository: IWeatherStationRepository,
     private readonly userRepository: IUserRepository,
-    private readonly climateMeasurementRepository: IClimateMeasurementRepository,
     private readonly stationEventPublisher: IStationEventPublisher,
   ) {}
 
@@ -61,12 +59,7 @@ export class WeatherStationService implements WeatherStationPort {
       (error as any).statusCode = 404;
       throw error;
     }
-    const measurement = await this.climateMeasurementRepository.findByStationId(id);
-    if (measurement) {
-      const error = new Error('Weather station has associated measurements and cannot be deleted');
-      (error as any).statusCode = 409;
-      throw error;
-    }
+
     await this.weatherStationRepository.remove(id);
     await this.stationEventPublisher.publishStationDeleted(id);
   }
