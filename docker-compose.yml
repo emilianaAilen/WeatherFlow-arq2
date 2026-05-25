@@ -66,6 +66,8 @@ services:
     depends_on:
       mongodb:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - weatherflow-network
     restart: unless-stopped

@@ -3,6 +3,7 @@ import { WeatherStation, Location, StationStatusType } from '@/domain';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
 import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
 import { IClimateMeasurementRepository } from '@/infrastructure/ports/IClimateMeasurementRepository';
+import { IStationEventPublisher } from '@/infrastructure/ports/IStationEventPublisher';
 import { WeatherStationPort } from '@/user-interface/ports/WeatherStationPort';
 import { CreateWeatherStationRequest } from '@/user-interface/dtos/CreateWeatherStationDTO';
 import { UpdateWeatherStationRequest } from '@/user-interface/dtos/UpdateWeatherStationDTO';
@@ -12,6 +13,7 @@ export class WeatherStationService implements WeatherStationPort {
     private readonly weatherStationRepository: IWeatherStationRepository,
     private readonly userRepository: IUserRepository,
     private readonly climateMeasurementRepository: IClimateMeasurementRepository,
+    private readonly stationEventPublisher: IStationEventPublisher,
   ) {}
 
   async getStationById(id: string): Promise<WeatherStation | null> {
@@ -48,6 +50,7 @@ export class WeatherStationService implements WeatherStationPort {
       existing.ownerId,
     );
     await this.weatherStationRepository.update(id, updated);
+    await this.stationEventPublisher.publishStationUpdated(updated);
     return updated;
   }
 
@@ -65,6 +68,7 @@ export class WeatherStationService implements WeatherStationPort {
       throw error;
     }
     await this.weatherStationRepository.remove(id);
+    await this.stationEventPublisher.publishStationDeleted(id);
   }
 
   async createWeatherStation(dto: CreateWeatherStationRequest): Promise<WeatherStation> {
@@ -90,6 +94,7 @@ export class WeatherStationService implements WeatherStationPort {
       dto.ownerId,
     );
     await this.weatherStationRepository.save(station);
+    await this.stationEventPublisher.publishStationCreated(station);
     return station;
   }
 }
