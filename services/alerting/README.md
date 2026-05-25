@@ -74,7 +74,7 @@ cp .env.example .env
 | `NODE_ENV`         | Environment                        | `development`            |
 | `PORT`             | Port the server listens on         | `3000`                   |
 | `MONGODB_URI`      | MongoDB connection string          | —                        |
-| `MONGODB_DB_NAME`  | Database name                      | `weatherflow`            |
+| `MONGODB_DB_NAME`  | Database name                      | `alerting`            |
 | `RABBITMQ_URL`     | RabbitMQ connection string         | `amqp://localhost`       |
 
 ## Running RabbitMQ
@@ -166,4 +166,4 @@ docker compose up --build -d
 docker compose down
 ```
 
-The API will be available at `http://localhost:3000` (or the `PORT` defined in `.env`).
+The API will be available at `http://localhost:3001` (or the `PORT_ALERTING` defined in `.env`).
