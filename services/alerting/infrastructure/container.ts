@@ -8,7 +8,7 @@ export const stationEventConsumer = new RabbitMQStationEventConsumer(
   process.env.RABBITMQ_URL ?? 'amqp://localhost',
   stationReadModelRepository
 );
-const notificationQueue = new RabbitMQNotificationQueue(
+export const notificationQueue = new RabbitMQNotificationQueue(
   process.env.RABBITMQ_URL ?? 'amqp://localhost',
 );
 

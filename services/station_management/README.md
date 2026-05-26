@@ -51,6 +51,15 @@ cp .env.example .env
 | `MONGODB_URI`      | MongoDB connection string          | —                        |
 | `MONGODB_DB_NAME`  | Database name                      | `station_management`     |
 
+## Testing
+
+Unit tests cover the domain layer (value objects and entities). Integration tests use **Testcontainers** to spin up ephemeral MongoDB and RabbitMQ instances.
+
+```bash
+npm run test               # Run Unit tests
+npm run test:integration   # Run Integration tests (requires Docker)
+```
+
 ## Running Locally
 
 ### Without Docker

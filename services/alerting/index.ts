@@ -18,6 +18,10 @@ class App {
     this.setupRoutes();
   }
 
+  public getExpressApp(): Express {
+    return this.app;
+  }
+
   private setupMiddlewares(): void {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -63,4 +67,8 @@ class App {
 }
 
 const app = new App();
-app.start().catch(console.error);
+export { app };
+
+if (process.env.NODE_ENV !== 'test') {
+  app.start().catch(console.error);
+}

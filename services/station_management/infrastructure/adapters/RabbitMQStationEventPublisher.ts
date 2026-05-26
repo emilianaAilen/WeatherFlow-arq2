@@ -52,4 +52,9 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
     );
     channel.sendToQueue(QUEUE, payload, { persistent: true });
   }
+
+  async close(): Promise<void> {
+    if (this.channel) await this.channel.close();
+    if (this.model) await this.model.close();
+  }
 }
