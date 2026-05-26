@@ -104,4 +104,53 @@ describe('RabbitMQStationEventConsumer', () => {
     expect(stationReadModelRepository.remove).toHaveBeenCalledWith('station-1');
     expect(mockChannel.ack).toHaveBeenCalledWith(message);
   });
+
+  it('should warn and ack on unknown event type', async () => {
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    await consumer.start();
+
+    const consumeCallback = mockChannel.consume.mock.calls[0][1];
+    const message = {
+      content: Buffer.from(JSON.stringify({ eventType: 'UnknownEvent', id: '1' })),
+    };
+
+    await consumeCallback(message);
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith('Unknown event type: UnknownEvent');
+    expect(mockChannel.ack).toHaveBeenCalledWith(message);
+    consoleWarnSpy.mockRestore();
+  });
+
+  it('should handle missing message gracefully', async () => {
+    await consumer.start();
+    const consumeCallback = mockChannel.consume.mock.calls[0][1];
+    
+    await consumeCallback(null);
+    expect(mockChannel.ack).not.toHaveBeenCalled();
+  });
+
+  it('should catch error, log it, and nack message', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    await consumer.start();
+
+    const consumeCallback = mockChannel.consume.mock.calls[0][1];
+    const message = {
+      content: Buffer.from(JSON.stringify({ eventType: 'StationCreated', id: '1' })),
+    };
+
+    stationReadModelRepository.save.mockRejectedValue(new Error('DB Error'));
+
+    await consumeCallback(message);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error processing station event', expect.any(Error));
+    expect(mockChannel.nack).toHaveBeenCalledWith(message, false, false);
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should close channel and connection on stop', async () => {
+    await consumer.start();
+    await consumer.stop();
+    
+    expect(mockChannel.close).toHaveBeenCalled();
+  });
 });
