@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { MongoDBConnection } from '@/infrastructure/database';
-import { userRoutes, weatherStationRoutes, measurementRoutes } from '@/user-interface/adapters';
+import { userRoutes, weatherStationRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
 import { SubscriptionError } from '@/domain/errors/SubscriptionError';
 
@@ -30,7 +30,7 @@ class App {
 
     this.app.use('/users', userRoutes);
     this.app.use('/weatherStations', weatherStationRoutes);
-    this.app.use('/measurements', measurementRoutes);
+
 
     this.app.get('/health', (_req: Request, res: Response) => {
       res.json({ status: 'OK', message: 'WeatherFlow API is running' });

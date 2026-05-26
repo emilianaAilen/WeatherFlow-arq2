@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { ClimateMeasurement } from '@/domain';
 import { IClimateMeasurementRepository } from '@/infrastructure/ports/IClimateMeasurementRepository';
-import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
+import { IStationReadModelRepository } from '@/infrastructure/ports/IStationReadModelRepository';
 import { INotificationQueue } from '@/infrastructure/ports/INotificationQueue';
 import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasurementPort';
 import { CreateMeasurementRequest } from '@/user-interface/dtos/CreateMeasurementDTO';
@@ -12,7 +12,7 @@ import { RepositoryMeasurementFilters } from '@/infrastructure/types';
 export class ClimateMeasurementService implements ClimateMeasurementPort {
   constructor(
     private readonly climateMeasurementRepository: IClimateMeasurementRepository,
-    private readonly weatherStationRepository: IWeatherStationRepository,
+    private readonly stationReadModelRepository: IStationReadModelRepository,
     private readonly notificationQueue: INotificationQueue,
   ) {}
 
@@ -60,7 +60,7 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
     };
 
     if (filters.stationName !== undefined) {
-      const station = await this.weatherStationRepository.findStationByName(filters.stationName);
+      const station = await this.stationReadModelRepository.findByName(filters.stationName);
       if (!station) return [];
       repoFilters.stationId = station.id;
     }
@@ -69,7 +69,7 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
   }
 
   async createMeasurement(dto: CreateMeasurementRequest): Promise<ClimateMeasurement> {
-    const station = await this.weatherStationRepository.findById(dto.stationId);
+    const station = await this.stationReadModelRepository.findById(dto.stationId);
     if (!station) {
       const error = new Error('Weather station not found');
       (error as any).statusCode = 404;

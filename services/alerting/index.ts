@@ -2,8 +2,9 @@ import 'dotenv/config';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { MongoDBConnection } from '@/infrastructure/database';
-import { userRoutes, weatherStationRoutes, measurementRoutes } from '@/user-interface/adapters';
+import { measurementRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
+import { stationEventConsumer } from '@/infrastructure/container';
 import { SubscriptionError } from '@/domain/errors/SubscriptionError';
 
 class App {
@@ -28,8 +29,7 @@ class App {
     this.app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     this.app.get('/docs.json', (_req: Request, res: Response) => res.json(swaggerDocument));
 
-    this.app.use('/users', userRoutes);
-    this.app.use('/weatherStations', weatherStationRoutes);
+
     this.app.use('/measurements', measurementRoutes);
 
     this.app.get('/health', (_req: Request, res: Response) => {
@@ -49,6 +49,7 @@ class App {
   async start(): Promise<void> {
     try {
       await MongoDBConnection.connect();
+      await stationEventConsumer.start();
       this.app.listen(this.port, () => {
         console.log(`WeatherFlow API running on port ${this.port}`);
         console.log(`Swagger UI:   http://localhost:${this.port}/docs`);

@@ -4,16 +4,12 @@ import {
   OpenApiGeneratorV3,
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { registerUserPaths, userTag } from "./features/users/paths";
-import { registerWeatherStationPaths, weatherStationTag } from "./features/weatherStations/paths";
 import { registerMeasurementPaths, measurementTag } from "./features/measurements/paths";
 
 extendZodWithOpenApi(z);
 
 const registry = new OpenAPIRegistry();
 
-registerUserPaths(registry);
-registerWeatherStationPaths(registry);
 registerMeasurementPaths(registry);
 
 export function generateOpenApiDocument() {
@@ -30,6 +26,6 @@ export function generateOpenApiDocument() {
       { url: "/", description: "Default server (relative path)" },
       { url: "http://localhost:3001", description: "Local development server (Host port)" },
     ],
-    tags: [userTag, weatherStationTag, measurementTag],
+    tags: [measurementTag],
   });
 }
