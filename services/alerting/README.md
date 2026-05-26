@@ -132,10 +132,11 @@ No local broker needed — the app connects to the cloud instance directly.
 
 ## Testing
 
-Unit tests cover the domain layer (value objects and entities).
+Unit tests cover the domain layer (value objects and entities). Integration tests use **Testcontainers** to spin up ephemeral MongoDB and RabbitMQ instances.
 
 ```bash
-npm test
+npm run test               # Run Unit tests
+npm run test:integration   # Run Integration tests (requires Docker)
 ```
 
 ## Running Locally

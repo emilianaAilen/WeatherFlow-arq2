@@ -7,7 +7,8 @@
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
     "dev": "ts-node -r tsconfig-paths/register index.ts",
-    "test": "jest"
+    "test": "jest",
+    "test:integration": "jest tests/integration"
   },
   "keywords": [
     "weather",
@@ -37,12 +38,17 @@
     ]
   },
   "devDependencies": {
+    "@testcontainers/mongodb": "^12.0.0",
+    "@testcontainers/rabbitmq": "^12.0.0",
     "@types/amqplib": "^0.10.8",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.0.0",
+    "@types/supertest": "^7.2.0",
     "@types/swagger-ui-express": "^4.1.8",
     "jest": "^29.5.0",
+    "supertest": "^7.2.2",
+    "testcontainers": "^12.0.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.0",
     "tsc-alias": "^1.8.16",
