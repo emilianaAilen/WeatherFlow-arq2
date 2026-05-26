@@ -75,6 +75,24 @@ export class WeatherStationController {
     }
   }
 
+  async searchByName(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { name } = req.query;
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        res.status(400).json({ message: 'Query parameter "name" is required and must be a non-empty string' });
+        return;
+      }
+      const station = await this.weatherStationService.searchByName(name.trim());
+      if (!station) {
+        res.status(404).json({ message: 'Weather station not found' });
+        return;
+      }
+      res.status(200).json(station);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async createWeatherStation(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const parsed = CreateWeatherStationSchema.safeParse(req.body);

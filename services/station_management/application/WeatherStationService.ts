@@ -64,6 +64,10 @@ export class WeatherStationService implements WeatherStationPort {
     await this.stationEventPublisher.publishStationDeleted(id);
   }
 
+  async searchByName(name: string): Promise<WeatherStation | null> {
+    return this.weatherStationRepository.findStationByName(name);
+  }
+
   async createWeatherStation(dto: CreateWeatherStationRequest): Promise<WeatherStation> {
     const owner = await this.userRepository.findById(dto.ownerId);
     if (!owner) {

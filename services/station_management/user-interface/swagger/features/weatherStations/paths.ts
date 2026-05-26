@@ -22,6 +22,37 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
 
   registry.registerPath({
     method: 'get',
+    path: '/weatherStations/search',
+    summary: 'Search a weather station by name',
+    description: 'Returns the weather station whose name matches the provided value (case-insensitive exact match).',
+    tags: [weatherStationTag.name],
+    request: {
+      query: z.object({
+        name: z.string().min(1).openapi({ example: 'Station Alpha', description: 'Station name to search for' }),
+      }),
+    },
+    responses: {
+      200: {
+        description: 'Weather station found.',
+        content: { 'application/json': { schema: WeatherStationResponseSchema } },
+      },
+      400: {
+        description: 'The "name" query parameter is missing or empty.',
+        content: {
+          'application/json': {
+            schema: errorResponse('Query parameter "name" is required and must be a non-empty string'),
+          },
+        },
+      },
+      404: {
+        description: 'No weather station exists with that name.',
+        content: { 'application/json': { schema: errorResponse('Weather station not found') } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
     path: '/weatherStations/{id}',
     summary: 'Get a weather station by ID',
     description: 'Returns a single weather station matching the provided UUID.',

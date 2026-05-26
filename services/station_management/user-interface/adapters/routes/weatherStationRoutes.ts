@@ -11,6 +11,10 @@ router.post('/', (req: Request, res: Response, next: NextFunction) =>
   weatherStationController.createWeatherStation(req, res, next),
 );
 
+router.get('/search', (req: Request, res: Response, next: NextFunction) =>
+  weatherStationController.searchByName(req, res, next),
+);
+
 router.get('/:id', (req: Request, res: Response, next: NextFunction) =>
   weatherStationController.getStationById(req, res, next),
 );
