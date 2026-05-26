@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import cors from 'cors';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { MongoDBConnection } from '@/infrastructure/database';
@@ -12,12 +13,13 @@ class App {
 
   constructor() {
     this.app = express();
-    this.port = parseInt(process.env.PORT || '3000', 10);
+    this.port = parseInt(process.env.PORT || '8080', 10);
     this.setupMiddlewares();
     this.setupRoutes();
   }
 
   private setupMiddlewares(): void {
+    this.app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
   }

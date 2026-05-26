@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import {
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,12 +10,13 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { stationFormSchema } from '../../schemas/weatherStation.schema';
 import type { StationFormData } from '../../schemas/weatherStation.schema';
 import type { WeatherStation } from '../../types';
+import { useUsers } from '../../hooks/useUsers';
 
 interface Props {
   open: boolean;
@@ -26,10 +28,12 @@ interface Props {
 
 export default function WeatherStationForm({ open, station, onClose, onSubmit, loading }: Props) {
   const isEdit = !!station;
+  const { data: users, isLoading: usersLoading } = useUsers();
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<StationFormData>({
     resolver: zodResolver(stationFormSchema) as Resolver<StationFormData>,
@@ -79,13 +83,32 @@ export default function WeatherStationForm({ open, station, onClose, onSubmit, l
               fullWidth
             />
             {!isEdit && (
-              <TextField
-                label="Owner ID (UUID)"
-                {...register('ownerId')}
-                error={!!errors.ownerId}
-                helperText={errors.ownerId?.message}
-                fullWidth
-                placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+              <Controller
+                name="ownerId"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    select
+                    label="Owner"
+                    {...field}
+                    error={!!errors.ownerId}
+                    helperText={errors.ownerId?.message}
+                    fullWidth
+                    slotProps={{
+                      select: { displayEmpty: true },
+                      inputLabel: { shrink: true },
+                      input: {
+                        endAdornment: usersLoading ? <CircularProgress size={18} sx={{ mr: 3 }} /> : null,
+                      },
+                    }}
+                  >
+                    {(users ?? []).map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.name} {user.surname}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
               />
             )}
             <TextField

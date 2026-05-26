@@ -1,19 +1,22 @@
 import { useEffect } from 'react';
 import {
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Stack,
   TextField,
 } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createMeasurementSchema } from '../../schemas/measurement.schema';
 import type { CreateMeasurementFormData } from '../../schemas/measurement.schema';
 import type { Measurement } from '../../types';
+import { useWeatherStations } from '../../hooks/useWeatherStations';
 
 type FormData = CreateMeasurementFormData;
 
@@ -27,10 +30,12 @@ interface Props {
 
 export default function MeasurementForm({ open, measurement, onClose, onSubmit, loading }: Props) {
   const isEdit = !!measurement;
+  const { data: stations, isLoading: stationsLoading } = useWeatherStations();
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(createMeasurementSchema) as Resolver<FormData>,
@@ -83,13 +88,32 @@ export default function MeasurementForm({ open, measurement, onClose, onSubmit, 
               fullWidth
             />
             {!isEdit && (
-              <TextField
-                label="Station ID (UUID)"
-                {...register('stationId')}
-                error={!!errors.stationId}
-                helperText={errors.stationId?.message}
-                fullWidth
-                placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+              <Controller
+                name="stationId"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    select
+                    label="Station"
+                    {...field}
+                    error={!!errors.stationId}
+                    helperText={errors.stationId?.message}
+                    fullWidth
+                    slotProps={{
+                      select: { displayEmpty: true },
+                      inputLabel: { shrink: true },
+                      input: {
+                        endAdornment: stationsLoading ? <CircularProgress size={18} sx={{ mr: 3 }} /> : null,
+                      },
+                    }}
+                  >
+                    {(stations ?? []).map((station) => (
+                      <MenuItem key={station.id} value={station.id}>
+                        {station.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
               />
             )}
           </Stack>

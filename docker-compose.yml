@@ -5,9 +5,11 @@ services:
     build: .
     container_name: weatherflow-api
     ports:
-      - "8080:3000"
+      - "8080:8080"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
+      PORT: "8080"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       MONGODB_URI: ${MONGODB_URI}
       MONGODB_DB_NAME: ${MONGODB_DB_NAME:-weatherflow}
     networks:
@@ -21,7 +23,7 @@ services:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
     container_name: weatherflow-ui
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
       - api
     networks:
