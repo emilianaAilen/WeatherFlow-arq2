@@ -95,6 +95,27 @@ describe('ClimateMeasurementService', () => {
     expect(result).toEqual([]);
   });
 
+  it('should pass startDate and endDate filters to repository', async () => {
+    climateMeasurementRepository.filterMeasurementsBy.mockResolvedValue([]);
+    const startDate = new Date('2024-01-01');
+    const endDate = new Date('2024-01-31');
+
+    await service.search({ startDate });
+    expect(climateMeasurementRepository.filterMeasurementsBy).toHaveBeenCalledWith(
+      expect.objectContaining({ startDate, endDate: undefined })
+    );
+
+    await service.search({ endDate });
+    expect(climateMeasurementRepository.filterMeasurementsBy).toHaveBeenCalledWith(
+      expect.objectContaining({ startDate: undefined, endDate })
+    );
+
+    await service.search({ startDate, endDate });
+    expect(climateMeasurementRepository.filterMeasurementsBy).toHaveBeenCalledWith(
+      expect.objectContaining({ startDate, endDate })
+    );
+  });
+
   it('should return empty array if station name not found during search', async () => {
     stationReadModelRepository.findByName.mockResolvedValue(null);
 

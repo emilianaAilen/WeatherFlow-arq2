@@ -26,6 +26,8 @@ export const MeasurementFiltersQuerySchema = z
     min_temperature: z.number().optional().openapi({ example: 20, description: 'Minimum temperature in °C (inclusive)' }),
     max_temperature: z.number().optional().openapi({ example: 35, description: 'Maximum temperature in °C (inclusive)' }),
     alert_status: z.boolean().optional().openapi({ example: true, description: 'Filter by active alert status' }),
+    start_date: z.string().optional().openapi({ example: '2024-01-01T00:00:00.000Z', description: 'Start date in ISO 8601 format (inclusive)' }),
+    end_date: z.string().optional().openapi({ example: '2024-01-31T23:59:59.999Z', description: 'End date in ISO 8601 format (inclusive)' }),
   })
   .openapi('MeasurementFiltersQuery');
 

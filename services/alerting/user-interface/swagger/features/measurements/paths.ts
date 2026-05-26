@@ -10,7 +10,7 @@ export function registerMeasurementPaths(registry: OpenAPIRegistry): void {
     method: 'get',
     path: '/measurements',
     summary: 'Search measurements with optional filters',
-    description: 'Returns all climate measurements. Results can be narrowed by station name (exact, case-insensitive), temperature range, and alert status. All query parameters are optional.',
+    description: 'Returns all climate measurements. Results can be narrowed by station name (exact, case-insensitive), temperature range, alert status, and date range. All query parameters are optional.',
     tags: [measurementTag.name],
     request: {
       query: MeasurementFiltersQuerySchema,

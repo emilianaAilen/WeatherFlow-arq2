@@ -3,4 +3,6 @@ export interface RepositoryMeasurementFilters {
   minTemperature?: number;
   maxTemperature?: number;
   isActiveAlert?: boolean;
+  startDate?: Date;
+  endDate?: Date;
 }

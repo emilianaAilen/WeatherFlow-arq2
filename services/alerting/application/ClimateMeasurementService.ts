@@ -57,6 +57,8 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
       minTemperature: filters.minTemperature,
       maxTemperature: filters.maxTemperature,
       isActiveAlert: filters.isActiveAlert,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
     };
 
     if (filters.stationName !== undefined) {

@@ -83,6 +83,13 @@ export class ClimateMeasurementRepository implements IClimateMeasurementReposito
       query['alert.status'] = filters.isActiveAlert;
     }
 
+    if (filters.startDate !== undefined || filters.endDate !== undefined) {
+      const dateQuery: Record<string, Date> = {};
+      if (filters.startDate !== undefined) dateQuery.$gte = filters.startDate;
+      if (filters.endDate !== undefined) dateQuery.$lte = filters.endDate;
+      query.dateTime = dateQuery;
+    }
+
     const docs = await ClimateMeasurementModel.find(query).exec();
     return docs.map(this.toDomain.bind(this));
   }

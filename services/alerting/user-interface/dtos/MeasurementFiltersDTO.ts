@@ -5,6 +5,8 @@ export interface MeasurementFilters {
   minTemperature?: number;
   maxTemperature?: number;
   isActiveAlert?: boolean;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export const MeasurementFiltersQuerySchema = z.object({
@@ -15,4 +17,6 @@ export const MeasurementFiltersQuerySchema = z.object({
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
     .optional(),
+  start_date: z.coerce.date().optional(),
+  end_date: z.coerce.date().optional(),
 });

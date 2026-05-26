@@ -85,6 +85,8 @@ export class ClimateMeasurementController {
         minTemperature: parsed.data.min_temperature,
         maxTemperature: parsed.data.max_temperature,
         isActiveAlert: parsed.data.alert_status,
+        startDate: parsed.data.start_date,
+        endDate: parsed.data.end_date,
       };
       const measurements = await this.climateMeasurementService.search(filters);
       res.status(200).json(measurements);
