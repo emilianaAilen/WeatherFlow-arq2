@@ -81,4 +81,23 @@ describe('WeatherStationService', () => {
     expect(weatherStationRepository.remove).toHaveBeenCalledWith('station-id');
     expect(stationEventPublisher.publishStationDeleted).toHaveBeenCalledWith('station-id');
   });
+
+  it('should return a station when searching by existing name', async () => {
+    const station = WeatherStation.create('station-id', 'Station Alpha', Location.create(10, 20), 'ModelX', StationStatusType.ACTIVE, 'owner-id');
+    weatherStationRepository.findStationByName.mockResolvedValue(station);
+
+    const result = await service.searchByName('Station Alpha');
+
+    expect(weatherStationRepository.findStationByName).toHaveBeenCalledWith('Station Alpha');
+    expect(result).toBe(station);
+  });
+
+  it('should return null when searching by a name that does not exist', async () => {
+    weatherStationRepository.findStationByName.mockResolvedValue(null);
+
+    const result = await service.searchByName('Nonexistent Station');
+
+    expect(weatherStationRepository.findStationByName).toHaveBeenCalledWith('Nonexistent Station');
+    expect(result).toBeNull();
+  });
 });

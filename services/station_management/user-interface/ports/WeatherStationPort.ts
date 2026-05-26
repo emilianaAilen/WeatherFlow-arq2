@@ -8,4 +8,5 @@ export interface WeatherStationPort {
   getStationById(id: string): Promise<WeatherStation | null>;
   getAllStations(): Promise<WeatherStation[]>;
   deleteStation(id: string): Promise<void>;
+  searchByName(name: string): Promise<WeatherStation | null>;
 }
