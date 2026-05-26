@@ -52,6 +52,20 @@ describe('ClimateMeasurementService', () => {
     expect(stationReadModelRepository.findById).toHaveBeenCalledWith('station-id');
     expect(climateMeasurementRepository.save).toHaveBeenCalledTimes(1);
     expect(result.stationId).toBe('station-id');
+    expect(notificationQueue.publish).not.toHaveBeenCalled();
+  });
+
+  it('should publish to queue when creating an active alert measurement', async () => {
+    stationReadModelRepository.findById.mockResolvedValue({ id: 'station-id', name: 'Station' });
+
+    await service.createMeasurement({
+      temperature: 50, // very high temperature -> ALARM
+      humidity: 50,
+      atmosphericPressure: 1013,
+      stationId: 'station-id',
+    });
+
+    expect(notificationQueue.publish).toHaveBeenCalled();
   });
 
   it('should throw error when creating measurement for non-existent station', async () => {
@@ -89,5 +103,59 @@ describe('ClimateMeasurementService', () => {
 
     expect(result).toEqual([]);
     expect(climateMeasurementRepository.filterMeasurementsBy).not.toHaveBeenCalled();
+  });
+
+  describe('getMeasurementById', () => {
+    it('should return measurement if found', async () => {
+      const measurement = ClimateMeasurement.create('id', 20, 50, 1013, new Date(), 'sid');
+      climateMeasurementRepository.findById.mockResolvedValue(measurement);
+      const result = await service.getMeasurementById('id');
+      expect(result).toEqual(measurement);
+    });
+
+    it('should return null if not found', async () => {
+      climateMeasurementRepository.findById.mockResolvedValue(null);
+      const result = await service.getMeasurementById('id');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('deleteMeasurement', () => {
+    it('should delete if found', async () => {
+      const measurement = ClimateMeasurement.create('id', 20, 50, 1013, new Date(), 'sid');
+      climateMeasurementRepository.findById.mockResolvedValue(measurement);
+      await service.deleteMeasurement('id');
+      expect(climateMeasurementRepository.remove).toHaveBeenCalledWith('id');
+    });
+
+    it('should throw 404 if not found', async () => {
+      climateMeasurementRepository.findById.mockResolvedValue(null);
+      await expect(service.deleteMeasurement('id')).rejects.toThrow('Climate measurement not found');
+    });
+  });
+
+  describe('updateMeasurement', () => {
+    it('should update and not publish if no alert', async () => {
+      const measurement = ClimateMeasurement.create('id', 20, 50, 1013, new Date(), 'sid');
+      climateMeasurementRepository.findById.mockResolvedValue(measurement);
+
+      const result = await service.updateMeasurement('id', { temperature: 25 });
+      expect(climateMeasurementRepository.update).toHaveBeenCalled();
+      expect(result.temperature.value).toBe(25);
+      expect(notificationQueue.publish).not.toHaveBeenCalled();
+    });
+
+    it('should update and publish if alert is active', async () => {
+      const measurement = ClimateMeasurement.create('id', 20, 50, 1013, new Date(), 'sid');
+      climateMeasurementRepository.findById.mockResolvedValue(measurement);
+
+      await service.updateMeasurement('id', { temperature: 50 }); // ALARM
+      expect(notificationQueue.publish).toHaveBeenCalled();
+    });
+
+    it('should throw 404 if not found on update', async () => {
+      climateMeasurementRepository.findById.mockResolvedValue(null);
+      await expect(service.updateMeasurement('id', { temperature: 25 })).rejects.toThrow('Climate measurement not found');
+    });
   });
 });
