@@ -1,12 +1,12 @@
 {
-  "name": "station-management",
+  "name": "station_management",
   "version": "1.0.0",
-  "description": "Weather Flow - Station Management Service",
+  "description": "Weather Flow API with hexagonal architecture",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
-    "dev": "ts-node -r tsconfig-paths/register index.ts",
+    "dev": "tsx watch index.ts",
     "test": "jest"
   },
   "keywords": [
@@ -29,7 +29,7 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/$1"
+      "^@/(.*)$": "<rootDir>/src/$1"
     },
     "testMatch": [
       "**/*.test.ts"
@@ -45,6 +45,7 @@
     "ts-node": "^10.9.0",
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.22.3",
     "typescript": "^5.0.0"
   }
 }

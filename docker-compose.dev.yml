@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  # ==========================================
+  # INFRAESTRUCTURA
+  # ==========================================
+  mongodb:
+    image: mongo:6
+    container_name: weatherflow-mongo-dev
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret-password-123
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data_dev:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: weatherflow-rabbitmq-dev
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  # ==========================================
+  # MICROSERVICIOS EN MODO DESARROLLO
+  # ==========================================
+  alerting:
+    build:
+      context: ./services/alerting
+      target: builder
+    container_name: weatherflow-alerting-dev
+    ports:
+      - "${PORT_ALERTING:-3001}:3000"
+    volumes:
+      - ./services/alerting:/app
+      - /app/node_modules
+    env_file:
+      - ./services/alerting/.env
+    command: npm run dev
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  station_management:
+    build:
+      context: ./services/station_management
+      target: builder
+    container_name: weatherflow-stations-dev
+    ports:
+      - "${PORT_STATIONS:-3000}:3000"
+    volumes:
+      - ./services/station_management:/app
+      - /app/node_modules
+    env_file:
+      - ./services/station_management/.env
+    command: npm run dev
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo_data_dev:
