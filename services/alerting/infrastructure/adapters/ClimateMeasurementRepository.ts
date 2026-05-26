@@ -79,6 +79,20 @@ export class ClimateMeasurementRepository implements IClimateMeasurementReposito
       query.temperature = tempQuery;
     }
 
+    if (filters.minHumidity !== undefined || filters.maxHumidity !== undefined) {
+      const humQuery: Record<string, number> = {};
+      if (filters.minHumidity !== undefined) humQuery.$gte = filters.minHumidity;
+      if (filters.maxHumidity !== undefined) humQuery.$lte = filters.maxHumidity;
+      query.humidity = humQuery;
+    }
+
+    if (filters.minPressure !== undefined || filters.maxPressure !== undefined) {
+      const pressQuery: Record<string, number> = {};
+      if (filters.minPressure !== undefined) pressQuery.$gte = filters.minPressure;
+      if (filters.maxPressure !== undefined) pressQuery.$lte = filters.maxPressure;
+      query.atmosphericPressure = pressQuery;
+    }
+
     if (filters.isActiveAlert !== undefined) {
       query['alert.status'] = filters.isActiveAlert;
     }

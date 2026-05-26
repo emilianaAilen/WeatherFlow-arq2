@@ -95,6 +95,20 @@ describe('ClimateMeasurementService', () => {
     expect(result).toEqual([]);
   });
 
+  it('should pass climate parameter filters to repository', async () => {
+    climateMeasurementRepository.filterMeasurementsBy.mockResolvedValue([]);
+    
+    await service.search({ minHumidity: 40, maxHumidity: 80 });
+    expect(climateMeasurementRepository.filterMeasurementsBy).toHaveBeenCalledWith(
+      expect.objectContaining({ minHumidity: 40, maxHumidity: 80 })
+    );
+
+    await service.search({ minPressure: 1000, maxPressure: 1020 });
+    expect(climateMeasurementRepository.filterMeasurementsBy).toHaveBeenCalledWith(
+      expect.objectContaining({ minPressure: 1000, maxPressure: 1020 })
+    );
+  });
+
   it('should return empty array if station name not found during search', async () => {
     stationReadModelRepository.findByName.mockResolvedValue(null);
 

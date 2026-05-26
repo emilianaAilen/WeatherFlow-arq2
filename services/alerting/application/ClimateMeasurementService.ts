@@ -56,6 +56,10 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
     const repoFilters: RepositoryMeasurementFilters = {
       minTemperature: filters.minTemperature,
       maxTemperature: filters.maxTemperature,
+      minHumidity: filters.minHumidity,
+      maxHumidity: filters.maxHumidity,
+      minPressure: filters.minPressure,
+      maxPressure: filters.maxPressure,
       isActiveAlert: filters.isActiveAlert,
     };
 
