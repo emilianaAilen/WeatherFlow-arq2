@@ -2,6 +2,10 @@
 
 Monorepo containing the microservices for the WeatherFlow weather monitoring platform. Built using Hexagonal Architecture.
 
+## Architecture
+
+For an in-depth explanation of why the system is split into multiple microservices and the responsibility of each component, please read our **[Architecture Decisions Document](file://docs/architecture.md)**.
+
 ## Services
 
 The platform is split into two independent services:
