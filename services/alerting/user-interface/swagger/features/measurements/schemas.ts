@@ -25,6 +25,10 @@ export const MeasurementFiltersQuerySchema = z
     station: z.string().optional().openapi({ example: 'station name', description: 'Exact station name (case-insensitive)' }),
     min_temperature: z.number().optional().openapi({ example: 20, description: 'Minimum temperature in °C (inclusive)' }),
     max_temperature: z.number().optional().openapi({ example: 35, description: 'Maximum temperature in °C (inclusive)' }),
+    min_humidity: z.number().optional().openapi({ example: 40, description: 'Minimum relative humidity in % (inclusive)' }),
+    max_humidity: z.number().optional().openapi({ example: 80, description: 'Maximum relative humidity in % (inclusive)' }),
+    min_pressure: z.number().optional().openapi({ example: 1000, description: 'Minimum atmospheric pressure in hPa (inclusive)' }),
+    max_pressure: z.number().optional().openapi({ example: 1020, description: 'Maximum atmospheric pressure in hPa (inclusive)' }),
     alert_status: z.boolean().optional().openapi({ example: true, description: 'Filter by active alert status' }),
   })
   .openapi('MeasurementFiltersQuery');

@@ -84,6 +84,10 @@ export class ClimateMeasurementController {
         stationName: parsed.data.station,
         minTemperature: parsed.data.min_temperature,
         maxTemperature: parsed.data.max_temperature,
+        minHumidity: parsed.data.min_humidity,
+        maxHumidity: parsed.data.max_humidity,
+        minPressure: parsed.data.min_pressure,
+        maxPressure: parsed.data.max_pressure,
         isActiveAlert: parsed.data.alert_status,
       };
       const measurements = await this.climateMeasurementService.search(filters);
