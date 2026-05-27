@@ -28,4 +28,8 @@ export class SubscriptionsList {
   isSubscribed(stationId: string): boolean {
     return this.stationIds.includes(stationId);
   }
+
+  toJSON(): string[] {
+    return this.stationIds;
+  }
 }
