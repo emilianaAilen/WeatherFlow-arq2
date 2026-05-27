@@ -6,7 +6,6 @@ import { MongoDBConnection } from '@/infrastructure/database';
 import { measurementRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
 import { stationEventConsumer } from '@/infrastructure/container';
-import { SubscriptionError } from '@/domain/errors/SubscriptionError';
 
 class App {
   private app: Express;
@@ -43,10 +42,6 @@ class App {
     });
 
     this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      if (err instanceof SubscriptionError) {
-        res.status(409).json({ message: err.message });
-        return;
-      }
       const status: number = err.statusCode || err.status || 500;
       res.status(status).json({ message: err.message || 'Internal Server Error' });
     });
