@@ -62,7 +62,10 @@ describe("ClimateMeasurement API Integration (E2E)", () => {
       name: "E2E Test Station",
     };
 
-    await rabbitChannel.assertQueue("station-events", { durable: true });
+    await rabbitChannel.assertQueue("station-events", { 
+      durable: true,
+      deadLetterExchange: "station-events-dlx"
+    });
     rabbitChannel.sendToQueue(
       "station-events",
       Buffer.from(JSON.stringify(event)),

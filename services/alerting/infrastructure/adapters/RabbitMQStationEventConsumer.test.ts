@@ -20,15 +20,19 @@ describe('RabbitMQStationEventConsumer', () => {
 
     mockChannel = {
       assertQueue: jest.fn(),
+      assertExchange: jest.fn(),
+      bindQueue: jest.fn(),
       consume: jest.fn(),
       ack: jest.fn(),
       nack: jest.fn(),
       close: jest.fn(),
+      on: jest.fn(),
     };
 
     const mockConnection = {
       createChannel: jest.fn().mockResolvedValue(mockChannel),
       close: jest.fn(),
+      on: jest.fn(),
     };
 
     (amqplib.connect as jest.Mock).mockResolvedValue(mockConnection);
@@ -105,8 +109,8 @@ describe('RabbitMQStationEventConsumer', () => {
     expect(mockChannel.ack).toHaveBeenCalledWith(message);
   });
 
-  it('should warn and ack on unknown event type', async () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+  it('should reject unknown event type and send to DLQ', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     await consumer.start();
 
     const consumeCallback = mockChannel.consume.mock.calls[0][1];
@@ -116,9 +120,9 @@ describe('RabbitMQStationEventConsumer', () => {
 
     await consumeCallback(message);
 
-    expect(consoleWarnSpy).toHaveBeenCalledWith('Unknown event type: UnknownEvent');
-    expect(mockChannel.ack).toHaveBeenCalledWith(message);
-    consoleWarnSpy.mockRestore();
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error processing station event, moving to DLQ', expect.any(Error));
+    expect(mockChannel.nack).toHaveBeenCalledWith(message, false, false);
+    consoleErrorSpy.mockRestore();
   });
 
   it('should handle missing message gracefully', async () => {
@@ -142,7 +146,7 @@ describe('RabbitMQStationEventConsumer', () => {
 
     await consumeCallback(message);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Error processing station event', expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error processing station event, moving to DLQ', expect.any(Error));
     expect(mockChannel.nack).toHaveBeenCalledWith(message, false, false);
     consoleErrorSpy.mockRestore();
   });

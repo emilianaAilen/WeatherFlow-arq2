@@ -12,10 +12,42 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
 
   private async getChannel(): Promise<Channel> {
     if (this.channel) return this.channel;
-    this.model = await amqplib.connect(this.url);
-    this.channel = await this.model.createChannel();
-    await this.channel.assertQueue(QUEUE, { durable: true });
-    return this.channel;
+
+    try {
+      if (!this.model) {
+        this.model = await amqplib.connect(this.url);
+        this.model.on('error', (err) => {
+          console.error('RabbitMQ connection error', err);
+          this.model = null;
+          this.channel = null;
+        });
+        this.model.on('close', () => {
+          console.info('RabbitMQ connection closed');
+          this.model = null;
+          this.channel = null;
+        });
+      }
+
+      this.channel = await this.model.createChannel();
+      this.channel.on('error', (err) => {
+        console.error('RabbitMQ channel error', err);
+        this.channel = null;
+      });
+      this.channel.on('close', () => {
+        console.info('RabbitMQ channel closed');
+        this.channel = null;
+      });
+
+      await this.channel.assertQueue(QUEUE, { 
+        durable: true,
+        deadLetterExchange: 'station-events-dlx'
+      });
+      return this.channel;
+    } catch (error) {
+      this.model = null;
+      this.channel = null;
+      throw error;
+    }
   }
 
   async publishStationCreated(station: WeatherStation): Promise<void> {
