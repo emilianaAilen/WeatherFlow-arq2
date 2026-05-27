@@ -1,4 +1,4 @@
-import client from './client';
+import { stationManagementClient as client } from './client';
 import type { WeatherStation } from '../types';
 
 export interface CreateStationPayload {
@@ -17,6 +17,15 @@ export interface UpdateStationPayload {
 
 export const weatherStationsApi = {
   list: () => client.get<WeatherStation[]>('/weatherStations').then((r) => r.data),
+
+  searchByName: (name: string) =>
+    client
+      .get<WeatherStation>('/weatherStations/search', { params: { name } })
+      .then((r) => r.data)
+      .catch((err) => {
+        if (err?.message === 'Weather station not found') return null;
+        return Promise.reject(err);
+      }),
 
   getById: (id: string) =>
     client.get<WeatherStation>(`/weatherStations/${id}`).then((r) => r.data),

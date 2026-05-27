@@ -1,4 +1,4 @@
-import client from './client';
+import { stationManagementClient as client } from './client';
 import type { User } from '../types';
 
 export interface CreateUserPayload {

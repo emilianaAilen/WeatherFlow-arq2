@@ -7,6 +7,14 @@ const STATIONS_KEY = ['weatherStations'];
 export const useWeatherStations = () =>
   useQuery({ queryKey: STATIONS_KEY, queryFn: weatherStationsApi.list });
 
+export const useSearchStation = (name: string) =>
+  useQuery({
+    queryKey: [...STATIONS_KEY, 'search', name],
+    queryFn: () => weatherStationsApi.searchByName(name),
+    enabled: name.trim().length > 0,
+    retry: false,
+  });
+
 export const useCreateStation = () => {
   const qc = useQueryClient();
   return useMutation({

@@ -46,6 +46,10 @@ export interface MeasurementFilters {
   station?: string;
   min_temperature?: number;
   max_temperature?: number;
+  min_humidity?: number;
+  max_humidity?: number;
+  min_pressure?: number;
+  max_pressure?: number;
   alert_status?: boolean;
 }
 

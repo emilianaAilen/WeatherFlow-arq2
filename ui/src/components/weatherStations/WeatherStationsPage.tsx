@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, InputAdornment, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   useWeatherStations,
+  useSearchStation,
   useCreateStation,
   useUpdateStation,
 } from '../../hooks/useWeatherStations';
@@ -21,6 +23,11 @@ export default function WeatherStationsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<WeatherStation | undefined>();
   const [notification, setNotification] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const isSearching = searchQuery.trim().length > 0;
+  const { data: searchResult, isFetching: searchFetching, error: searchError } = useSearchStation(searchQuery);
+  const displayedStations = isSearching ? (searchResult ? [searchResult] : []) : (stations ?? []);
 
   const handleSubmit = (data: StationFormData) => {
     const { latitude, longitude, name, model, status, ownerId } = data;
@@ -88,14 +95,29 @@ export default function WeatherStationsPage() {
         </Button>
       </Box>
 
-      {isLoading && <CircularProgress />}
-      {error && <ErrorAlert error={error} />}
-      {stations && (
-        <WeatherStationsTable
-          stations={stations}
-          onEdit={(s) => { setEditTarget(s); setFormOpen(true); }}
-        />
-      )}
+      <TextField
+        placeholder="Search by name…"
+        size="small"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        sx={{ mb: 2, width: 300 }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
+
+      {(isLoading || searchFetching) && <CircularProgress />}
+      {!isSearching && error && <ErrorAlert error={error} />}
+      <WeatherStationsTable
+        stations={displayedStations}
+        onEdit={(s) => { setEditTarget(s); setFormOpen(true); }}
+      />
 
       <WeatherStationForm
         open={formOpen}

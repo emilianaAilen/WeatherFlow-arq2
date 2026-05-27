@@ -1,4 +1,4 @@
-import client from './client';
+import { alertingClient as client } from './client';
 import type { Measurement, MeasurementFilters } from '../types';
 
 export interface CreateMeasurementPayload {
@@ -22,6 +22,14 @@ export const measurementsApi = {
       params.min_temperature = String(filters.min_temperature);
     if (filters?.max_temperature !== undefined)
       params.max_temperature = String(filters.max_temperature);
+    if (filters?.min_humidity !== undefined)
+      params.min_humidity = String(filters.min_humidity);
+    if (filters?.max_humidity !== undefined)
+      params.max_humidity = String(filters.max_humidity);
+    if (filters?.min_pressure !== undefined)
+      params.min_pressure = String(filters.min_pressure);
+    if (filters?.max_pressure !== undefined)
+      params.max_pressure = String(filters.max_pressure);
     if (filters?.alert_status !== undefined)
       params.alert_status = String(filters.alert_status);
     return client.get<Measurement[]>('/measurements', { params }).then((r) => r.data);
