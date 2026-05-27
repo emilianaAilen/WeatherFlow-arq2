@@ -1,126 +1,106 @@
 # WeatherFlow
 
-REST API for managing measuring stations and process climate data for later consultation by third parties, built with hexagonal architecture.
+Monorepo containing the microservices for the WeatherFlow weather monitoring platform. Built using Hexagonal Architecture.
 
-## Tech Stack
+## Services
 
-- **Runtime:** Node.js 18
-- **Language:** TypeScript
-- **Framework:** Express
-- **Database:** MongoDB (via Mongoose)
-- **Containerization:** Docker + Docker Compose
+The platform is split into two independent services:
 
-## Project Structure
-
-```
-src/
-├── application/                        # Use cases / application services
-│   ├── ClimateMeasurementService.ts
-│   ├── UserService.ts
-│   └── WeatherStationService.ts
-├── domain/                             # Core business logic (no external dependencies)
-│   ├── entities/
-│   │   ├── ClimateMeasurement/
-│   │   ├── User/
-│   │   └── WeatherStation/
-│   ├── errors/
-│   │   └── SubscriptionError.ts
-│   ├── value-objects/
-│   │   ├── Alert/
-│   │   ├── Humidity/
-│   │   ├── Location/
-│   │   ├── Pressure/
-│   │   ├── SubscriptionsList/
-│   │   └── Temperature/
-│   └── types.ts
-├── infrastructure/                     # Driven adapters (DB, external services)
-│   ├── adapters/                       # Mongoose repository implementations
-│   │   ├── ClimateMeasurementRepository.ts
-│   │   ├── UserRepository.ts
-│   │   └── WeatherStationRepository.ts
-│   ├── database/
-│   │   ├── schemas/                    # Mongoose schemas
-│   │   └── MongoDBConnection.ts
-│   ├── ports/                          # Repository interfaces
-│   │   ├── IClimateMeasurementRepository.ts
-│   │   ├── IUserRepository.ts
-│   │   └── IWeatherStationRepository.ts
-│   ├── container.ts                    # Dependency injection
-│   └── types.ts
-├── user-interface/                     # Driving adapters (HTTP)
-│   ├── adapters/
-│   │   ├── controllers/                # Express controllers
-│   │   │   ├── ClimateMeasurementController.ts
-│   │   │   ├── UserController.ts
-│   │   │   └── WeatherStationController.ts
-│   │   └── routes/                     # Express route definitions
-│   │       ├── measurementRoutes.ts
-│   │       ├── userRoutes.ts
-│   │       └── weatherStationRoutes.ts
-│   ├── dtos/                           # Request/response shapes with Zod validation
-│   ├── ports/                          # Service interfaces for controllers
-│   └── swagger/                        # OpenAPI docs (zod-to-openapi)
-│       └── features/
-│           ├── measurements/
-│           ├── users/
-│           └── weatherStations/
-└── index.ts                            # App entry point
-```
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and fill in the values:
-
-```bash
-cp .env.example .env
-```
-
-| Variable        | Description                        | Default       |
-| --------------- | ---------------------------------- | ------------- |
-| `NODE_ENV`      | Environment                        | `development` |
-| `PORT`          | Port the server listens on         | `3000`        |
-| `MONGODB_URI`   | MongoDB connection string          | —             |
-| `MONGODB_DB_NAME` | Database name                    | `weatherflow` |
-
-## Testing
-
-Unit tests cover the domain layer (value objects and entities).
-
-```bash
-npm test
-```
+1. **[Station Management](file://services/station_management):** Responsible for managing users, weather stations, and subscriptions.
+   - **Port:** 4000 (Internal 3000)
+   - **Database:** `station_management`
+   - **Swagger Documentation:** http://localhost:4000/docs
+2. **[Alerting](file://services/alerting):** Responsible for receiving climate measurements and publishing alerts to RabbitMQ when extreme conditions are met.
+   - **Port:** 4001 (Internal 3000)
+   - **Database:** `alerting`
+   - **Swagger Documentation:** http://localhost:4001/docs
 
 ## Running Locally
 
+### With Docker Compose (Recommended)
+
+Make sure you have Docker and Docker Compose installed.
+
+#### Development Mode (with hot-reload)
+
+Copy the pre-configured dev environment files for each service:
+
+```bash
+cp services/alerting/.env.example.local services/alerting/.env
+cp services/station_management/.env.example.local services/station_management/.env
+```
+
+Then start the stack:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+#### Production Mode
+
+```bash
+docker compose up --build
+```
+
 ### Without Docker
 
-**Prerequisites:** Node.js 18+, a running MongoDB instance.
+Each service can be run independently. You will need Node.js (v18+), a running MongoDB instance, and a running RabbitMQ instance.
+
+1. Go to the service directory:
+   ```bash
+   cd services/station_management
+   # or
+   cd services/alerting
+   ```
+2. Copy `.env.example` to `.env` and fill in the values:
+   ```bash
+   cp .env.example .env
+   ```
+3. Install dependencies and start the service in development mode:
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+## Testing
+
+The project uses Jest for all testing layers, from Unit to End-to-End.
+
+### Unit & Integration Tests (Testcontainers)
+Each microservice has its own test suite. We use **Testcontainers** to spin up ephemeral MongoDB and RabbitMQ Docker instances automatically when running integration tests.
+Make sure your Docker daemon is running before executing these.
 
 ```bash
-# Install dependencies
-npm install
-
-# Start in development mode
-npm run dev
+cd services/station_management # or services/alerting
+npm run test               # Unit tests
+npm run test:integration   # Integration tests with Testcontainers
 ```
 
-The API will be available at `http://localhost:3000`.
+### End-to-End (E2E) Tests
+E2E tests validate the complete flow between both services (e.g. creating a station, sending an extreme measurement, and triggering a RabbitMQ alert).
+We use a dedicated, isolated environment to avoid polluting development data.
 
-### With Docker
-
-**Prerequisites:** Docker and Docker Compose.
-
-The Docker setup expects an external MongoDB — set `MONGODB_URI` in your `.env` file before starting.
-
+To run the full E2E pipeline, just execute the provided script at the root of the project:
 ```bash
-# Build and start the container
-docker compose up --build
-
-# Run in the background
-docker compose up --build -d
-
-# Stop the container
-docker compose down
+./run-e2e.sh
 ```
+This script will:
+1. Spin up the isolated `docker-compose.e2e.yml` environment.
+2. Wait dynamically for the services to be ready.
+3. Execute the tests located in `tests/e2e/`.
+4. Tear down the environment and wipe the temporary database automatically.
 
-The API will be available at `http://localhost:3000` (or the `PORT` defined in `.env`).
+## Repository Structure
+
+```text
+.
+├── docker-compose.dev.yml       # Docker compose for development
+├── docker-compose.yml           # Docker compose for production
+├── docker-compose.e2e.yml       # Ephemeral Docker compose for E2E tests
+├── run-e2e.sh                   # Automation script for E2E pipeline
+├── services/
+│   ├── alerting/                # Alerting service code
+│   └── station_management/      # Station Management service code
+└── tests/
+    └── e2e/                     # Cross-service End-to-End tests
+```

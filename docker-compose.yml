@@ -1,17 +1,73 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  api:
-    build: .
-    container_name: weatherflow-api
+  # ==========================================
+  # INFRAESTRUCTURA
+  # ==========================================
+  mongodb:
+    image: mongo:6
+    container_name: weatherflow-mongo
     ports:
-      - "8080:8080"
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-secret}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - weatherflow-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: weatherflow-rabbitmq
+    ports:
+      - "5672:5672" # Puerto de mensajes
+      - "15672:15672" # Panel de administración
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - weatherflow-network
+
+  # ==========================================
+  # MICROSERVICIOS
+  # ==========================================
+  alerting:
+    build:
+      context: ./services/alerting
+    container_name: weatherflow-alerting
+    ports:
+      - "${PORT_ALERTING:-3001}:3000"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: "8080"
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
-      MONGODB_URI: ${MONGODB_URI}
-      MONGODB_DB_NAME: ${MONGODB_DB_NAME:-weatherflow}
+      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-secret}@mongodb:27017/alerting?authSource=admin
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - weatherflow-network
+    restart: unless-stopped
+
+  station_management:
+    build:
+      context: ./services/station_management
+    container_name: weatherflow-stations
+    ports:
+      - "${PORT_STATIONS:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-secret}@mongodb:27017/station_management?authSource=admin
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - weatherflow-network
     restart: unless-stopped
@@ -33,3 +89,6 @@ services:
 networks:
   weatherflow-network:
     driver: bridge
+
+volumes:
+  mongo_data:
