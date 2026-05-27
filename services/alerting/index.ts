@@ -52,9 +52,9 @@ class App {
       await MongoDBConnection.connect();
       await stationEventConsumer.start();
       this.app.listen(this.port, () => {
-        console.log(`WeatherFlow - Alerting API is running on port ${this.port}`);
-        console.log(`Swagger UI:   http://localhost:${this.port}/docs`);
-        console.log(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
+        console.info(`WeatherFlow - Alerting API is running on port ${this.port}`);
+        console.info(`Swagger UI:   http://localhost:${this.port}/docs`);
+        console.info(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
       });
     } catch (error) {
       console.error('Failed to start application:', error);
