@@ -6,6 +6,7 @@ import { MongoDBConnection } from '@/infrastructure/database';
 import { userRoutes, weatherStationRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
 import { SubscriptionError } from '@/domain/errors/SubscriptionError';
+import { NotFoundError, ConflictError } from '@/domain';
 
 class App {
   private app: Express;
@@ -43,7 +44,11 @@ class App {
     });
 
     this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      if (err instanceof SubscriptionError) {
+      if (err instanceof NotFoundError) {
+        res.status(404).json({ message: err.message });
+        return;
+      }
+      if (err instanceof ConflictError || err instanceof SubscriptionError) {
         res.status(409).json({ message: err.message });
         return;
       }
