@@ -18,4 +18,4 @@ npm install
 npm run dev
 ```
 
-The app runs on `http://localhost:3000` and expects the API at `http://localhost:8080` (configurable via `VITE_API_BASE_URL` in `.env`).
+The app runs on `http://localhost:3000`.

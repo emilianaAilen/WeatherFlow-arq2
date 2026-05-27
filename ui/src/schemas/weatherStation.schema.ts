@@ -9,7 +9,6 @@ export const stationFormSchema = z.object({
   status: z.enum(['Active', 'Inactive']).optional(),
 });
 
-// Keep named exports the pages expect
 export const createStationSchema = stationFormSchema;
 export const updateStationSchema = stationFormSchema.partial();
 
