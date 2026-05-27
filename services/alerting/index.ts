@@ -1,11 +1,11 @@
 import 'dotenv/config';
+import cors from 'cors';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { MongoDBConnection } from '@/infrastructure/database';
 import { measurementRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
 import { stationEventConsumer } from '@/infrastructure/container';
-import { SubscriptionError } from '@/domain/errors/SubscriptionError';
 
 class App {
   private app: Express;
@@ -23,6 +23,7 @@ class App {
   }
 
   private setupMiddlewares(): void {
+    this.app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
   }
@@ -41,10 +42,6 @@ class App {
     });
 
     this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      if (err instanceof SubscriptionError) {
-        res.status(409).json({ message: err.message });
-        return;
-      }
       const status: number = err.statusCode || err.status || 500;
       res.status(status).json({ message: err.message || 'Internal Server Error' });
     });

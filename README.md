@@ -8,16 +8,19 @@ For an in-depth explanation of why the system is split into multiple microservic
 
 ## Services
 
-The platform is split into two independent services:
+The platform is split into two backend microservices and a frontend UI:
 
-1. **[Station Management](file://services/station_management):** Responsible for managing users, weather stations, and subscriptions.
-   - **Port:** 4000 (Internal 3000)
+1. **[Station Management](file://services/station_management):** Manages users, weather stations, and subscriptions.
+   - **Port:** 4000 (internal 3000)
    - **Database:** `station_management`
-   - **Swagger Documentation:** http://localhost:4000/docs
-2. **[Alerting](file://services/alerting):** Responsible for receiving climate measurements and publishing alerts to RabbitMQ when extreme conditions are met.
-   - **Port:** 4001 (Internal 3000)
+   - **Swagger:** http://localhost:4000/docs
+2. **[Alerting](file://services/alerting):** Receives climate measurements and publishes alerts to RabbitMQ when extreme conditions are detected.
+   - **Port:** 4001 (internal 3000)
    - **Database:** `alerting`
-   - **Swagger Documentation:** http://localhost:4001/docs
+   - **Swagger:** http://localhost:4001/docs
+3. **[UI](file://ui):** React + Vite frontend for managing stations, users, and measurements.
+   - **Port:** 3000
+   - **App:** http://localhost:3000
 
 ## Running Locally
 
@@ -48,7 +51,9 @@ docker compose up --build
 
 ### Without Docker
 
-Each service can be run independently. You will need Node.js (v18+), a running MongoDB instance, and a running RabbitMQ instance.
+Each service and the UI can be run independently. You will need Node.js (v22+), a running MongoDB instance, and a running RabbitMQ instance.
+
+**Backend services:**
 
 1. Go to the service directory:
    ```bash
@@ -60,7 +65,24 @@ Each service can be run independently. You will need Node.js (v18+), a running M
    ```bash
    cp .env.example .env
    ```
-3. Install dependencies and start the service in development mode:
+3. Install dependencies and start:
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+**UI:**
+
+1. Go to the UI directory:
+   ```bash
+   cd ui
+   ```
+2. Set environment variables in `.env`:
+   ```bash
+   VITE_STATION_MANAGEMENT_URL=http://localhost:4000
+   VITE_ALERTING_URL=http://localhost:4001
+   ```
+3. Install dependencies and start:
    ```bash
    npm install
    npm run dev
@@ -102,9 +124,10 @@ This script will:
 ├── docker-compose.yml           # Docker compose for production
 ├── docker-compose.e2e.yml       # Ephemeral Docker compose for E2E tests
 ├── run-e2e.sh                   # Automation script for E2E pipeline
+├── ui/                          # React + Vite frontend
 ├── services/
-│   ├── alerting/                # Alerting service code
-│   └── station_management/      # Station Management service code
+│   ├── alerting/                # Alerting microservice
+│   └── station_management/      # Station Management microservice
 └── tests/
     └── e2e/                     # Cross-service End-to-End tests
 ```
