@@ -18,9 +18,9 @@ export function generateOpenApiDocument() {
     openapi: "3.0.0",
     info: {
       version: "1.0.0",
-      title: "WeatherFlow API",
+      title: "WeatherFlow - Alerting API",
       description:
-        "REST API for the WeatherFlow weather monitoring platform. Provides endpoints to manage users, weather stations, and climate measurements.",
+        "Receives climate measurements and publishes alerts to RabbitMQ when extreme weather conditions are detected.",
     },
     servers: [
       { url: "/", description: "Default server (relative path)" },

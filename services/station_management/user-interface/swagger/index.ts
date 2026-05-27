@@ -20,9 +20,9 @@ export function generateOpenApiDocument() {
     openapi: "3.0.0",
     info: {
       version: "1.0.0",
-      title: "WeatherFlow API",
+      title: "WeatherFlow - Station Management API",
       description:
-        "REST API for the WeatherFlow weather monitoring platform. Provides endpoints to manage users, weather stations, and climate measurements.",
+        "Manages users, weather stations, and subscriptions within the WeatherFlow platform.",
     },
     servers: [
       { url: "/", description: "Default server (relative path)" },

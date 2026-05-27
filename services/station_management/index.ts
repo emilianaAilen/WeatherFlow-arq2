@@ -33,7 +33,7 @@ class App {
 
 
     this.app.get('/health', (_req: Request, res: Response) => {
-      res.json({ status: 'OK', message: 'WeatherFlow API is running' });
+      res.json({ status: 'OK', message: 'WeatherFlow - Station Management API is running' });
     });
 
     this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -50,7 +50,7 @@ class App {
     try {
       await MongoDBConnection.connect();
       this.app.listen(this.port, () => {
-        console.log(`WeatherFlow API running on port ${this.port}`);
+        console.log(`WeatherFlow - Station Management API is running on port ${this.port}`);
         console.log(`Swagger UI:   http://localhost:${this.port}/docs`);
         console.log(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
       });

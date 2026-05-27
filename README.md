@@ -23,6 +23,15 @@ Make sure you have Docker and Docker Compose installed.
 
 #### Development Mode (with hot-reload)
 
+Copy the pre-configured dev environment files for each service:
+
+```bash
+cp services/alerting/.env.example.local services/alerting/.env
+cp services/station_management/.env.example.local services/station_management/.env
+```
+
+Then start the stack:
+
 ```bash
 docker compose -f docker-compose.dev.yml up --build
 ```
