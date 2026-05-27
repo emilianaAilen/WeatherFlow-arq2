@@ -36,7 +36,7 @@ services:
       target: builder
     container_name: weatherflow-alerting-dev
     ports:
-      - "${PORT_ALERTING:-3001}:3000"
+      - "${PORT_ALERTING:-4001}:3000"
     volumes:
       - ./services/alerting:/app
       - /app/node_modules
@@ -55,7 +55,7 @@ services:
       target: builder
     container_name: weatherflow-stations-dev
     ports:
-      - "${PORT_STATIONS:-3000}:3000"
+      - "${PORT_STATIONS:-4000}:3000"
     volumes:
       - ./services/station_management:/app
       - /app/node_modules
