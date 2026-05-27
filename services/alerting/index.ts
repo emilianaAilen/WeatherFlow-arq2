@@ -37,7 +37,7 @@ class App {
     this.app.use('/measurements', measurementRoutes);
 
     this.app.get('/health', (_req: Request, res: Response) => {
-      res.json({ status: 'OK', message: 'WeatherFlow API is running' });
+      res.json({ status: 'OK', message: 'WeatherFlow - Alerting API is running' });
     });
 
     this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -55,7 +55,7 @@ class App {
       await MongoDBConnection.connect();
       await stationEventConsumer.start();
       this.app.listen(this.port, () => {
-        console.log(`WeatherFlow API running on port ${this.port}`);
+        console.log(`WeatherFlow - Alerting API is running on port ${this.port}`);
         console.log(`Swagger UI:   http://localhost:${this.port}/docs`);
         console.log(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
       });
