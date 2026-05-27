@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: weatherflow-mongo-e2e
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret-password-123
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: weatherflow-rabbitmq-e2e
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  alerting:
+    build:
+      context: ./services/alerting
+      target: builder
+    container_name: weatherflow-alerting-e2e
+    ports:
+      - "4011:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=e2e
+      - MONGODB_URI=mongodb://admin:secret-password-123@mongodb:27017/weatherflow?authSource=admin
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    command: npm run dev
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  station_management:
+    build:
+      context: ./services/station_management
+      target: builder
+    container_name: weatherflow-stations-e2e
+    ports:
+      - "4010:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=e2e
+      - MONGODB_URI=mongodb://admin:secret-password-123@mongodb:27017/weatherflow?authSource=admin
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    command: npm run dev
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
