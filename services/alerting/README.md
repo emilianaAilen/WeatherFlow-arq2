@@ -17,38 +17,30 @@ Built with hexagonal architecture.
 
 ```
 ├── application/                        # Use cases / application services
-│   ├── ClimateMeasurementService.ts
-│   ├── UserService.ts
-│   └── WeatherStationService.ts
-├── domain/                             # Core business logic (no external dependencies)
+│   └── ClimateMeasurementService.ts
+├── domain/                             # Core business logic
 │   ├── entities/
-│   │   ├── ClimateMeasurement/
-│   │   ├── User/
-│   │   └── WeatherStation/
-│   ├── errors/
-│   │   └── SubscriptionError.ts
+│   │   └── ClimateMeasurement/
 │   ├── value-objects/
 │   │   ├── Alert/
 │   │   ├── Humidity/
 │   │   ├── Location/
 │   │   ├── Pressure/
-│   │   ├── SubscriptionsList/
 │   │   └── Temperature/
 │   └── types.ts
-├── infrastructure/                     # Driven adapters (DB, message broker)
+├── infrastructure/                     # Driven adapters (DB, MQ)
 │   ├── adapters/
 │   │   ├── ClimateMeasurementRepository.ts
-│   │   ├── UserRepository.ts
-│   │   ├── WeatherStationRepository.ts
-│   │   └── RabbitMQNotificationQueue.ts  # INotificationQueue implementation
+│   │   ├── RabbitMQNotificationQueue.ts
+│   │   ├── RabbitMQStationEventConsumer.ts
+│   │   └── StationReadModelRepository.ts
 │   ├── database/
-│   │   ├── schemas/
-│   │   └── MongoDBConnection.ts
+│   │   ├── MongoDBConnection.ts
+│   │   └── schemas/
 │   ├── ports/
 │   │   ├── IClimateMeasurementRepository.ts
-│   │   ├── INotificationQueue.ts         # Outbound port for the message queue
-│   │   ├── IUserRepository.ts
-│   │   └── IWeatherStationRepository.ts
+│   │   ├── INotificationQueue.ts
+│   │   └── IStationReadModelRepository.ts
 │   ├── container.ts                    # Dependency injection
 │   └── types.ts
 ├── user-interface/                     # Driving adapters (HTTP)
@@ -58,6 +50,10 @@ Built with hexagonal architecture.
 │   ├── dtos/
 │   ├── ports/
 │   └── swagger/
+│       ├── features/
+│       └── shared/
+├── tests/
+│   └── integration/
 └── index.ts                            # App entry point
 ```
 
@@ -74,8 +70,9 @@ cp .env.example .env
 | `NODE_ENV`         | Environment                        | `development`            |
 | `PORT`             | Port the server listens on         | `3000`                   |
 | `MONGODB_URI`      | MongoDB connection string          | —                        |
-| `MONGODB_DB_NAME`  | Database name                      | `alerting`            |
+| `MONGODB_DB_NAME`  | Database name                      | `alerting`               |
 | `RABBITMQ_URL`     | RabbitMQ connection string         | `amqp://localhost`       |
+| `CORS_ORIGIN`      | Allowed CORS origin                | `http://localhost:3000`  |
 
 ## Running RabbitMQ
 
