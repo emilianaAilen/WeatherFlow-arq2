@@ -4,14 +4,19 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
+  FormControl,
+  FormHelperText,
+  InputLabel,
+  MenuItem,
+  Select,
   Typography,
 } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { subscribeSchema } from '../../schemas/user.schema';
 import type { SubscribeFormData } from '../../schemas/user.schema';
 import type { User } from '../../types';
+import { useWeatherStations } from '../../hooks/useWeatherStations';
 
 interface Props {
   open: boolean;
@@ -23,7 +28,7 @@ interface Props {
 
 export default function SubscribeDialog({ open, user, onClose, onSubmit, loading }: Props) {
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -31,6 +36,8 @@ export default function SubscribeDialog({ open, user, onClose, onSubmit, loading
     resolver: zodResolver(subscribeSchema),
     defaultValues: { weatherStationId: '' },
   });
+
+  const { data: stations = [] } = useWeatherStations();
 
   const handleClose = () => {
     reset();
@@ -45,14 +52,29 @@ export default function SubscribeDialog({ open, user, onClose, onSubmit, loading
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Subscribing user: <strong>{user?.name} {user?.surname}</strong>
           </Typography>
-          <TextField
-            label="Weather Station ID (UUID)"
-            {...register('weatherStationId')}
-            error={!!errors.weatherStationId}
-            helperText={errors.weatherStationId?.message}
-            fullWidth
-            placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
-          />
+          <FormControl fullWidth error={!!errors.weatherStationId}>
+            <InputLabel id="station-select-label">Weather Station</InputLabel>
+            <Controller
+              name="weatherStationId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  labelId="station-select-label"
+                  label="Weather Station"
+                >
+                  {stations.map((station) => (
+                    <MenuItem key={station.id} value={station.id}>
+                      {station.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            />
+            {errors.weatherStationId && (
+              <FormHelperText>{errors.weatherStationId.message}</FormHelperText>
+            )}
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={loading}>
