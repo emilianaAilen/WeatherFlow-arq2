@@ -1,9 +1,9 @@
-import request from "supertest";
-import { MongoDBContainer } from "@testcontainers/mongodb";
-import { RabbitMQContainer } from "@testcontainers/rabbitmq";
-import amqplib from "amqplib";
+import request from 'supertest';
+import { MongoDBContainer } from '@testcontainers/mongodb';
+import { RabbitMQContainer } from '@testcontainers/rabbitmq';
+import amqplib from 'amqplib';
 
-describe("StationManagement API Integration (E2E)", () => {
+describe('StationManagement API Integration (E2E)', () => {
   let mongoContainer: any;
   let rabbitContainer: any;
   let rabbitConnection: any;
@@ -14,17 +14,14 @@ describe("StationManagement API Integration (E2E)", () => {
   let stationEventPublisher: any;
 
   beforeAll(async () => {
-    mongoContainer = await new MongoDBContainer("mongo:6").start();
-    rabbitContainer = await new RabbitMQContainer(
-      "rabbitmq:3-management-alpine",
-    ).start();
+    mongoContainer = await new MongoDBContainer('mongo:6').start();
+    rabbitContainer = await new RabbitMQContainer('rabbitmq:3-management-alpine').start();
 
-    process.env.MONGODB_URI =
-      mongoContainer.getConnectionString() + "?directConnection=true";
+    process.env.MONGODB_URI = mongoContainer.getConnectionString() + '?directConnection=true';
     process.env.RABBITMQ_URL = rabbitContainer.getAmqpUrl();
-    process.env.NODE_ENV = "test";
+    process.env.NODE_ENV = 'test';
 
-    const indexModule = await import("../../index");
+    const indexModule = await import('../../index');
     app = indexModule.app;
     const dbModule = await import('../../infrastructure/database');
     MongoDBConnection = dbModule.MongoDBConnection;
@@ -33,16 +30,14 @@ describe("StationManagement API Integration (E2E)", () => {
 
     await MongoDBConnection.connect();
 
-    rabbitConnection = await amqplib.connect(
-      process.env.RABBITMQ_URL as string,
-    );
+    rabbitConnection = await amqplib.connect(process.env.RABBITMQ_URL as string);
     rabbitChannel = await rabbitConnection.createChannel();
   }, 60000);
 
   afterAll(async () => {
     if (stationEventPublisher) await stationEventPublisher.close();
     await MongoDBConnection.disconnect();
-    
+
     if (rabbitChannel) await rabbitChannel.close();
     if (rabbitConnection) await rabbitConnection.close();
 
@@ -50,8 +45,8 @@ describe("StationManagement API Integration (E2E)", () => {
     if (rabbitContainer) await rabbitContainer.stop();
   });
 
-  it("should create a User and a Weather Station, and publish StationCreated event", async () => {
-    const queueName = "station-events";
+  it('should create a User and a Weather Station, and publish StationCreated event', async () => {
+    const queueName = 'station-events';
     await rabbitChannel.assertQueue(queueName, { durable: true });
 
     let receivedEvent: any = null;
@@ -65,10 +60,10 @@ describe("StationManagement API Integration (E2E)", () => {
       { noAck: true },
     );
 
-    const userRes = await request(app.getExpressApp()).post("/users").send({
-      email: "test@example.com",
-      name: "E2E Tester",
-      surname: "Test",
+    const userRes = await request(app.getExpressApp()).post('/users').send({
+      email: 'test@example.com',
+      name: 'E2E Tester',
+      surname: 'Test',
     });
 
     expect(userRes.status).toBe(201);
@@ -76,11 +71,11 @@ describe("StationManagement API Integration (E2E)", () => {
     expect(userId).toBeDefined();
 
     const stationRes = await request(app.getExpressApp())
-      .post("/weatherStations")
+      .post('/weatherStations')
       .send({
-        name: "Test E2E Station",
+        name: 'Test E2E Station',
         ownerId: userId,
-        model: "Vantage Pro2",
+        model: 'Vantage Pro2',
         location: {
           latitude: -34.6,
           longitude: -58.4,
@@ -91,17 +86,15 @@ describe("StationManagement API Integration (E2E)", () => {
     const stationId = stationRes.body.id;
     expect(stationId).toBeDefined();
 
-    const getRes = await request(app.getExpressApp()).get(
-      `/weatherStations/${stationId}`,
-    );
+    const getRes = await request(app.getExpressApp()).get(`/weatherStations/${stationId}`);
     expect(getRes.status).toBe(200);
-    expect(getRes.body.name).toBe("Test E2E Station");
+    expect(getRes.body.name).toBe('Test E2E Station');
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     expect(receivedEvent).not.toBeNull();
-    expect(receivedEvent.eventType).toBe("StationCreated");
+    expect(receivedEvent.eventType).toBe('StationCreated');
     expect(receivedEvent.id).toBe(stationId);
-    expect(receivedEvent.name).toBe("Test E2E Station");
+    expect(receivedEvent.name).toBe('Test E2E Station');
   });
 });

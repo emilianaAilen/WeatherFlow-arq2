@@ -29,7 +29,7 @@ const climateMeasurementSchema = new Schema<IClimateMeasurementDocument>(
     },
     stationId: { type: String, ref: 'WeatherStation', required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const ClimateMeasurementModel: Model<IClimateMeasurementDocument> =

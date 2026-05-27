@@ -38,9 +38,9 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         this.channel = null;
       });
 
-      await this.channel.assertQueue(QUEUE, { 
+      await this.channel.assertQueue(QUEUE, {
         durable: true,
-        deadLetterExchange: 'station-events-dlx'
+        deadLetterExchange: 'station-events-dlx',
       });
       return this.channel;
     } catch (error) {
@@ -57,7 +57,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         eventType: 'StationCreated',
         id: station.id,
         name: station.getName(),
-      })
+      }),
     );
     channel.sendToQueue(QUEUE, payload, { persistent: true });
   }
@@ -69,7 +69,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         eventType: 'StationUpdated',
         id: station.id,
         name: station.getName(),
-      })
+      }),
     );
     channel.sendToQueue(QUEUE, payload, { persistent: true });
   }
@@ -80,7 +80,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
       JSON.stringify({
         eventType: 'StationDeleted',
         id: stationId,
-      })
+      }),
     );
     channel.sendToQueue(QUEUE, payload, { persistent: true });
   }

@@ -18,7 +18,7 @@ const userSchema = new Schema<IUserDocument>(
     email: { type: String, required: true, unique: true },
     subscriptions: [{ type: String, ref: 'WeatherStation' }],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const UserModel: Model<IUserDocument> = mongoose.model<IUserDocument>('User', userSchema);

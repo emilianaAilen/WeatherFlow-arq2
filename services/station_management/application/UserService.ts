@@ -57,7 +57,7 @@ export class UserService implements UserPort {
   async createUser(dto: CreateUserRequest): Promise<User> {
     const existing = await this.userRepository.findByEmail(dto.email);
     if (existing) {
-      throw new ConflictError("User with given email already exists");
+      throw new ConflictError('User with given email already exists');
     }
     const id = crypto.randomUUID();
     const user = User.create(id, dto.name, dto.surname, dto.email);

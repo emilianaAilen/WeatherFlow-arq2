@@ -15,7 +15,7 @@ export class WeatherStation {
     location: Location,
     sensorModel: string,
     status: StationStatusType,
-    ownerId: string
+    ownerId: string,
   ) {
     this.id = id;
     this.name = name;
@@ -31,7 +31,7 @@ export class WeatherStation {
     location: Location,
     sensorModel: string,
     status: StationStatusType,
-    ownerId: string
+    ownerId: string,
   ): WeatherStation {
     return new WeatherStation(id, name, location, sensorModel, status, ownerId);
   }

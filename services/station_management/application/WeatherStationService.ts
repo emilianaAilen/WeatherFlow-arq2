@@ -1,5 +1,11 @@
 import crypto from 'crypto';
-import { WeatherStation, Location, StationStatusType, NotFoundError, ConflictError } from '@/domain';
+import {
+  WeatherStation,
+  Location,
+  StationStatusType,
+  NotFoundError,
+  ConflictError,
+} from '@/domain';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
 import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
 import { IStationEventPublisher } from '@/infrastructure/ports/IStationEventPublisher';
@@ -22,7 +28,10 @@ export class WeatherStationService implements WeatherStationPort {
     return this.weatherStationRepository.getAll();
   }
 
-  async updateWeatherStation(id: string, dto: UpdateWeatherStationRequest): Promise<WeatherStation> {
+  async updateWeatherStation(
+    id: string,
+    dto: UpdateWeatherStationRequest,
+  ): Promise<WeatherStation> {
     const existing = await this.weatherStationRepository.findById(id);
     if (!existing) {
       throw new NotFoundError('Weather station not found');

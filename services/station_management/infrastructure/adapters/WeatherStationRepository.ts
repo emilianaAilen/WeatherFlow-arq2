@@ -1,6 +1,9 @@
 import { WeatherStation, Location, StationStatusType } from '@/domain';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
-import { WeatherStationModel, IWeatherStationDocument } from '@/infrastructure/database/schemas/WeatherStationSchema';
+import {
+  WeatherStationModel,
+  IWeatherStationDocument,
+} from '@/infrastructure/database/schemas/WeatherStationSchema';
 
 export class WeatherStationRepository implements IWeatherStationRepository {
   private toDomain(doc: IWeatherStationDocument): WeatherStation {

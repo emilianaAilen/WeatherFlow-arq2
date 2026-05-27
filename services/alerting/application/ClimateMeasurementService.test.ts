@@ -35,7 +35,7 @@ describe('ClimateMeasurementService', () => {
     service = new ClimateMeasurementService(
       climateMeasurementRepository,
       stationReadModelRepository,
-      notificationQueue
+      notificationQueue,
     );
   });
 
@@ -77,7 +77,7 @@ describe('ClimateMeasurementService', () => {
         humidity: 50,
         atmosphericPressure: 1013,
         stationId: 'invalid-id',
-      })
+      }),
     ).rejects.toThrow('Weather station not found');
   });
 
@@ -90,22 +90,22 @@ describe('ClimateMeasurementService', () => {
 
     expect(stationReadModelRepository.findByName).toHaveBeenCalledWith('Station');
     expect(climateMeasurementRepository.filterMeasurementsBy).toHaveBeenCalledWith(
-      expect.objectContaining({ stationId: 'station-id' })
+      expect.objectContaining({ stationId: 'station-id' }),
     );
     expect(result).toEqual([]);
   });
 
   it('should pass climate parameter filters to repository', async () => {
     climateMeasurementRepository.filterMeasurementsBy.mockResolvedValue([]);
-    
+
     await service.search({ minHumidity: 40, maxHumidity: 80 });
     expect(climateMeasurementRepository.filterMeasurementsBy).toHaveBeenCalledWith(
-      expect.objectContaining({ minHumidity: 40, maxHumidity: 80 })
+      expect.objectContaining({ minHumidity: 40, maxHumidity: 80 }),
     );
 
     await service.search({ minPressure: 1000, maxPressure: 1020 });
     expect(climateMeasurementRepository.filterMeasurementsBy).toHaveBeenCalledWith(
-      expect.objectContaining({ minPressure: 1000, maxPressure: 1020 })
+      expect.objectContaining({ minPressure: 1000, maxPressure: 1020 }),
     );
   });
 
@@ -144,7 +144,9 @@ describe('ClimateMeasurementService', () => {
 
     it('should throw 404 if not found', async () => {
       climateMeasurementRepository.findById.mockResolvedValue(null);
-      await expect(service.deleteMeasurement('id')).rejects.toThrow('Climate measurement not found');
+      await expect(service.deleteMeasurement('id')).rejects.toThrow(
+        'Climate measurement not found',
+      );
     });
   });
 
@@ -169,7 +171,9 @@ describe('ClimateMeasurementService', () => {
 
     it('should throw 404 if not found on update', async () => {
       climateMeasurementRepository.findById.mockResolvedValue(null);
-      await expect(service.updateMeasurement('id', { temperature: 25 })).rejects.toThrow('Climate measurement not found');
+      await expect(service.updateMeasurement('id', { temperature: 25 })).rejects.toThrow(
+        'Climate measurement not found',
+      );
     });
   });
 });

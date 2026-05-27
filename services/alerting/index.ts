@@ -35,7 +35,6 @@ class App {
     this.app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     this.app.get('/docs.json', (_req: Request, res: Response) => res.json(swaggerDocument));
 
-
     this.app.use('/measurements', measurementRoutes);
 
     this.app.get('/health', (_req: Request, res: Response) => {

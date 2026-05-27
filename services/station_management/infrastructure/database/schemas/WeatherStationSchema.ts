@@ -27,10 +27,8 @@ const weatherStationSchema = new Schema<IWeatherStationDocument>(
     status: { type: String, enum: Object.values(StationStatusType), required: true },
     ownerId: { type: String, ref: 'User', required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const WeatherStationModel: Model<IWeatherStationDocument> = mongoose.model<IWeatherStationDocument>(
-  'WeatherStation',
-  weatherStationSchema
-);
+export const WeatherStationModel: Model<IWeatherStationDocument> =
+  mongoose.model<IWeatherStationDocument>('WeatherStation', weatherStationSchema);

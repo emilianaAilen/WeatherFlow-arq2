@@ -38,7 +38,6 @@ class App {
     this.app.use('/users', userRoutes);
     this.app.use('/weatherStations', weatherStationRoutes);
 
-
     this.app.get('/health', (_req: Request, res: Response) => {
       res.json({ status: 'OK', message: 'WeatherFlow - Station Management API is running' });
     });
