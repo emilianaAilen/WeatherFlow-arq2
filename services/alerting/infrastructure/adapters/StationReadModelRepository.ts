@@ -1,4 +1,7 @@
-import { IStationReadModelRepository, StationReadModel } from '@/infrastructure/ports/IStationReadModelRepository';
+import {
+  IStationReadModelRepository,
+  StationReadModel,
+} from '@/infrastructure/ports/IStationReadModelRepository';
 import { StationReadModelModel } from '@/infrastructure/database/schemas/StationReadModelSchema';
 
 export class StationReadModelRepository implements IStationReadModelRepository {

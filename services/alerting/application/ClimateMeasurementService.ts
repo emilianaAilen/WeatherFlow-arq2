@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { ClimateMeasurement } from '@/domain';
+import { ClimateMeasurement, NotFoundError } from '@/domain';
 import { IClimateMeasurementRepository } from '@/infrastructure/ports/IClimateMeasurementRepository';
 import { IStationReadModelRepository } from '@/infrastructure/ports/IStationReadModelRepository';
 import { INotificationQueue } from '@/infrastructure/ports/INotificationQueue';
@@ -23,9 +23,7 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
   async deleteMeasurement(id: string): Promise<void> {
     const existing = await this.climateMeasurementRepository.findById(id);
     if (!existing) {
-      const error = new Error('Climate measurement not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('Climate measurement not found');
     }
     await this.climateMeasurementRepository.remove(id);
   }
@@ -33,9 +31,7 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
   async updateMeasurement(id: string, dto: UpdateMeasurementRequest): Promise<ClimateMeasurement> {
     const existing = await this.climateMeasurementRepository.findById(id);
     if (!existing) {
-      const error = new Error('Climate measurement not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('Climate measurement not found');
     }
     const updated = ClimateMeasurement.create(
       existing.id,
@@ -75,9 +71,7 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
   async createMeasurement(dto: CreateMeasurementRequest): Promise<ClimateMeasurement> {
     const station = await this.stationReadModelRepository.findById(dto.stationId);
     if (!station) {
-      const error = new Error('Weather station not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('Weather station not found');
     }
     const id = crypto.randomUUID();
     const measurement = ClimateMeasurement.create(

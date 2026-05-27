@@ -20,15 +20,19 @@ describe('RabbitMQStationEventConsumer', () => {
 
     mockChannel = {
       assertQueue: jest.fn(),
+      assertExchange: jest.fn(),
+      bindQueue: jest.fn(),
       consume: jest.fn(),
       ack: jest.fn(),
       nack: jest.fn(),
       close: jest.fn(),
+      on: jest.fn(),
     };
 
     const mockConnection = {
       createChannel: jest.fn().mockResolvedValue(mockChannel),
       close: jest.fn(),
+      on: jest.fn(),
     };
 
     (amqplib.connect as jest.Mock).mockResolvedValue(mockConnection);
@@ -51,7 +55,7 @@ describe('RabbitMQStationEventConsumer', () => {
           eventType: 'StationCreated',
           id: 'station-1',
           name: 'Station One',
-        })
+        }),
       ),
     };
 
@@ -75,13 +79,16 @@ describe('RabbitMQStationEventConsumer', () => {
           eventType: 'StationUpdated',
           id: 'station-1',
           name: 'Station One Updated',
-        })
+        }),
       ),
     };
 
     await consumeCallback(message);
 
-    expect(stationReadModelRepository.update).toHaveBeenCalledWith('station-1', 'Station One Updated');
+    expect(stationReadModelRepository.update).toHaveBeenCalledWith(
+      'station-1',
+      'Station One Updated',
+    );
     expect(mockChannel.ack).toHaveBeenCalledWith(message);
   });
 
@@ -95,7 +102,7 @@ describe('RabbitMQStationEventConsumer', () => {
         JSON.stringify({
           eventType: 'StationDeleted',
           id: 'station-1',
-        })
+        }),
       ),
     };
 
@@ -105,8 +112,8 @@ describe('RabbitMQStationEventConsumer', () => {
     expect(mockChannel.ack).toHaveBeenCalledWith(message);
   });
 
-  it('should warn and ack on unknown event type', async () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+  it('should reject unknown event type and send to DLQ', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     await consumer.start();
 
     const consumeCallback = mockChannel.consume.mock.calls[0][1];
@@ -116,15 +123,18 @@ describe('RabbitMQStationEventConsumer', () => {
 
     await consumeCallback(message);
 
-    expect(consoleWarnSpy).toHaveBeenCalledWith('Unknown event type: UnknownEvent');
-    expect(mockChannel.ack).toHaveBeenCalledWith(message);
-    consoleWarnSpy.mockRestore();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error processing station event, moving to DLQ',
+      expect.any(Error),
+    );
+    expect(mockChannel.nack).toHaveBeenCalledWith(message, false, false);
+    consoleErrorSpy.mockRestore();
   });
 
   it('should handle missing message gracefully', async () => {
     await consumer.start();
     const consumeCallback = mockChannel.consume.mock.calls[0][1];
-    
+
     await consumeCallback(null);
     expect(mockChannel.ack).not.toHaveBeenCalled();
   });
@@ -142,7 +152,10 @@ describe('RabbitMQStationEventConsumer', () => {
 
     await consumeCallback(message);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Error processing station event', expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error processing station event, moving to DLQ',
+      expect.any(Error),
+    );
     expect(mockChannel.nack).toHaveBeenCalledWith(message, false, false);
     consoleErrorSpy.mockRestore();
   });
@@ -150,7 +163,7 @@ describe('RabbitMQStationEventConsumer', () => {
   it('should close channel and connection on stop', async () => {
     await consumer.start();
     await consumer.stop();
-    
+
     expect(mockChannel.close).toHaveBeenCalled();
   });
 });

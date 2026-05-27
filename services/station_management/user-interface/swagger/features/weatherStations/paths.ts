@@ -1,9 +1,16 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
-import { CreateWeatherStationRequestSchema, UpdateWeatherStationRequestSchema, WeatherStationResponseSchema } from './schemas';
+import {
+  CreateWeatherStationRequestSchema,
+  UpdateWeatherStationRequestSchema,
+  WeatherStationResponseSchema,
+} from './schemas';
 import { errorResponse, validationErrorResponse } from '../../shared/responses';
 
-export const weatherStationTag = { name: 'Weather Stations', description: 'Weather station management' };
+export const weatherStationTag = {
+  name: 'Weather Stations',
+  description: 'Weather station management',
+};
 
 export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
   registry.registerPath({
@@ -24,11 +31,15 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
     method: 'get',
     path: '/weatherStations/search',
     summary: 'Search a weather station by name',
-    description: 'Returns the weather station whose name matches the provided value (case-insensitive exact match).',
+    description:
+      'Returns the weather station whose name matches the provided value (case-insensitive exact match).',
     tags: [weatherStationTag.name],
     request: {
       query: z.object({
-        name: z.string().min(1).openapi({ example: 'Station Alpha', description: 'Station name to search for' }),
+        name: z
+          .string()
+          .min(1)
+          .openapi({ example: 'Station Alpha', description: 'Station name to search for' }),
       }),
     },
     responses: {
@@ -40,7 +51,9 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
         description: 'The "name" query parameter is missing or empty.',
         content: {
           'application/json': {
-            schema: errorResponse('Query parameter "name" is required and must be a non-empty string'),
+            schema: errorResponse(
+              'Query parameter "name" is required and must be a non-empty string',
+            ),
           },
         },
       },
@@ -58,7 +71,9 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
     description: 'Returns a single weather station matching the provided UUID.',
     tags: [weatherStationTag.name],
     request: {
-      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
+      params: z.object({
+        id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
+      }),
     },
     responses: {
       200: {
@@ -67,7 +82,9 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
       },
       400: {
         description: 'The provided id is not a valid UUID.',
-        content: { 'application/json': { schema: errorResponse('Invalid id format — must be a UUID') } },
+        content: {
+          'application/json': { schema: errorResponse('Invalid id format — must be a UUID') },
+        },
       },
       404: {
         description: 'No weather station exists with the given id.',
@@ -80,16 +97,21 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
     method: 'delete',
     path: '/weatherStations/{id}',
     summary: 'Delete a weather station',
-    description: 'Permanently removes a weather station. Fails if the station has associated climate measurements.',
+    description:
+      'Permanently removes a weather station. Fails if the station has associated climate measurements.',
     tags: [weatherStationTag.name],
     request: {
-      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
+      params: z.object({
+        id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
+      }),
     },
     responses: {
       204: { description: 'Weather station deleted successfully.' },
       400: {
         description: 'The provided id is not a valid UUID.',
-        content: { 'application/json': { schema: errorResponse('Invalid id format — must be a UUID') } },
+        content: {
+          'application/json': { schema: errorResponse('Invalid id format — must be a UUID') },
+        },
       },
       404: {
         description: 'Weather station not found.',
@@ -97,7 +119,13 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
       },
       409: {
         description: 'Weather station has associated measurements and cannot be deleted.',
-        content: { 'application/json': { schema: errorResponse('Weather station has associated measurements and cannot be deleted') } },
+        content: {
+          'application/json': {
+            schema: errorResponse(
+              'Weather station has associated measurements and cannot be deleted',
+            ),
+          },
+        },
       },
     },
   });
@@ -106,10 +134,13 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
     method: 'patch',
     path: '/weatherStations/{id}',
     summary: 'Update a weather station',
-    description: 'Partially updates a weather station. At least one field must be provided. Name must remain unique.',
+    description:
+      'Partially updates a weather station. At least one field must be provided. Name must remain unique.',
     tags: [weatherStationTag.name],
     request: {
-      params: z.object({ id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }) }),
+      params: z.object({
+        id: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
+      }),
       body: {
         required: true,
         content: { 'application/json': { schema: UpdateWeatherStationRequestSchema } },
@@ -122,7 +153,9 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
       },
       400: {
         description: 'Invalid UUID or request body failed validation.',
-        content: { 'application/json': { schema: validationErrorResponse('status', 'Invalid enum value') } },
+        content: {
+          'application/json': { schema: validationErrorResponse('status', 'Invalid enum value') },
+        },
       },
       404: {
         description: 'Weather station not found.',
@@ -130,7 +163,11 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
       },
       409: {
         description: 'A weather station with that name already exists.',
-        content: { 'application/json': { schema: errorResponse('A weather station with that name already exists') } },
+        content: {
+          'application/json': {
+            schema: errorResponse('A weather station with that name already exists'),
+          },
+        },
       },
     },
   });
@@ -139,7 +176,8 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
     method: 'post',
     path: '/weatherStations',
     summary: 'Create a new weather station',
-    description: 'Registers a new weather station. The name must be unique. The owner must exist. Status defaults to Active.',
+    description:
+      'Registers a new weather station. The name must be unique. The owner must exist. Status defaults to Active.',
     tags: [weatherStationTag.name],
     request: {
       body: {
@@ -154,7 +192,11 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
       },
       400: {
         description: 'Request body failed validation.',
-        content: { 'application/json': { schema: validationErrorResponse('location.latitude', 'Must be between -90 and 90') } },
+        content: {
+          'application/json': {
+            schema: validationErrorResponse('location.latitude', 'Must be between -90 and 90'),
+          },
+        },
       },
       404: {
         description: 'The specified owner does not exist.',
@@ -162,7 +204,11 @@ export function registerWeatherStationPaths(registry: OpenAPIRegistry): void {
       },
       409: {
         description: 'A weather station with that name already exists.',
-        content: { 'application/json': { schema: errorResponse('A weather station with that name already exists') } },
+        content: {
+          'application/json': {
+            schema: errorResponse('A weather station with that name already exists'),
+          },
+        },
       },
     },
   });

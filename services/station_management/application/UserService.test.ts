@@ -67,7 +67,7 @@ describe('UserService', () => {
       const existing = User.create('id', 'Old', 'Surname', 'old@test.com');
       userRepository.findById.mockResolvedValue(existing);
       userRepository.findByEmail.mockResolvedValue(null);
-      
+
       const result = await service.updateUser('id', { name: 'New' });
       expect(userRepository.update).toHaveBeenCalled();
       expect(result.name).toBe('New');
@@ -84,7 +84,9 @@ describe('UserService', () => {
       userRepository.findById.mockResolvedValue(existing);
       userRepository.findByEmail.mockResolvedValue(otherUser);
 
-      await expect(service.updateUser('id', { email: 'new@test.com' })).rejects.toThrow('User with given email already exists');
+      await expect(service.updateUser('id', { email: 'new@test.com' })).rejects.toThrow(
+        'User with given email already exists',
+      );
     });
   });
 
@@ -106,10 +108,19 @@ describe('UserService', () => {
     it('should throw 409 if user owns a station', async () => {
       const existing = User.create('id', 'Old', 'Surname', 'old@test.com');
       userRepository.findById.mockResolvedValue(existing);
-      const station = WeatherStation.create('sid', 'Name', Location.create(0,0), 'Model', StationStatusType.ACTIVE, 'id');
+      const station = WeatherStation.create(
+        'sid',
+        'Name',
+        Location.create(0, 0),
+        'Model',
+        StationStatusType.ACTIVE,
+        'id',
+      );
       weatherStationRepository.findStationByOwner.mockResolvedValue(station);
 
-      await expect(service.deleteUser('id')).rejects.toThrow('User owns one or more weather stations and cannot be deleted');
+      await expect(service.deleteUser('id')).rejects.toThrow(
+        'User owns one or more weather stations and cannot be deleted',
+      );
     });
   });
 
@@ -127,14 +138,23 @@ describe('UserService', () => {
       const existing = User.create('id', 'Old', 'Surname', 'test@test.com');
       userRepository.findByEmail.mockResolvedValue(existing);
 
-      await expect(service.createUser({ name: 'N', surname: 'S', email: 'test@test.com' })).rejects.toThrow('User with given email already exists');
+      await expect(
+        service.createUser({ name: 'N', surname: 'S', email: 'test@test.com' }),
+      ).rejects.toThrow('User with given email already exists');
     });
   });
 
   describe('subscribe', () => {
     it('should subscribe successfully', async () => {
       const user = User.create('id', 'Old', 'Surname', 'old@test.com');
-      const station = WeatherStation.create('sid', 'Name', Location.create(0,0), 'Model', StationStatusType.ACTIVE, 'id2');
+      const station = WeatherStation.create(
+        'sid',
+        'Name',
+        Location.create(0, 0),
+        'Model',
+        StationStatusType.ACTIVE,
+        'id2',
+      );
       userRepository.findById.mockResolvedValue(user);
       weatherStationRepository.findById.mockResolvedValue(station);
 

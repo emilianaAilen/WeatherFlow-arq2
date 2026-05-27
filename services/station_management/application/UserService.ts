@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { User } from '@/domain';
+import { User, NotFoundError, ConflictError } from '@/domain';
 import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
 import { UserPort } from '@/user-interface/ports/UserPort';
@@ -23,16 +23,12 @@ export class UserService implements UserPort {
   async updateUser(id: string, dto: UpdateUserRequest): Promise<User> {
     const existing = await this.userRepository.findById(id);
     if (!existing) {
-      const error = new Error('User not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('User not found');
     }
     if (dto.email && dto.email !== existing.email) {
       const emailTaken = await this.userRepository.findByEmail(dto.email);
       if (emailTaken) {
-        const error = new Error('User with given email already exists');
-        (error as any).statusCode = 409;
-        throw error;
+        throw new ConflictError('User with given email already exists');
       }
     }
     const updated = User.create(
@@ -49,15 +45,11 @@ export class UserService implements UserPort {
   async deleteUser(id: string): Promise<void> {
     const existing = await this.userRepository.findById(id);
     if (!existing) {
-      const error = new Error('User not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('User not found');
     }
     const ownedStation = await this.weatherStationRepository.findStationByOwner(id);
     if (ownedStation) {
-      const error = new Error('User owns one or more weather stations and cannot be deleted');
-      (error as any).statusCode = 409;
-      throw error;
+      throw new ConflictError('User owns one or more weather stations and cannot be deleted');
     }
     await this.userRepository.remove(id);
   }
@@ -65,9 +57,7 @@ export class UserService implements UserPort {
   async createUser(dto: CreateUserRequest): Promise<User> {
     const existing = await this.userRepository.findByEmail(dto.email);
     if (existing) {
-      const error = new Error("User with given email already exists");
-      (error as any).statusCode = 409;
-      throw error;
+      throw new ConflictError('User with given email already exists');
     }
     const id = crypto.randomUUID();
     const user = User.create(id, dto.name, dto.surname, dto.email);
@@ -78,15 +68,11 @@ export class UserService implements UserPort {
   async subscribe(id: string, stationId: string): Promise<void> {
     const user = await this.userRepository.findById(id);
     if (!user) {
-      const error = new Error('User not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('User not found');
     }
     const station = await this.weatherStationRepository.findById(stationId);
     if (!station) {
-      const error = new Error('Weather station not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('Weather station not found');
     }
     const updatedUser = user.subscribe(stationId);
     await this.userRepository.update(id, updatedUser);

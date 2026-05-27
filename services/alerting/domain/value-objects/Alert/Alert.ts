@@ -20,11 +20,7 @@ export class Alert {
     return new Alert(false, AlertType.NONE);
   }
 
-  static fromValues(
-    temperature: Temperature,
-    humidity: Humidity,
-    pressure: Pressure,
-  ): Alert {
+  static fromValues(temperature: Temperature, humidity: Humidity, pressure: Pressure): Alert {
     if (temperature.isExtremeHeat()) return new Alert(true, AlertType.EXTREME_HEAT);
     if (temperature.isFrost()) return new Alert(true, AlertType.FROST);
     if (pressure.isLowPressure()) return new Alert(true, AlertType.STORM);

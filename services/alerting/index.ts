@@ -6,6 +6,7 @@ import { MongoDBConnection } from '@/infrastructure/database';
 import { measurementRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
 import { stationEventConsumer } from '@/infrastructure/container';
+import { NotFoundError, ConflictError } from '@/domain';
 
 class App {
   private app: Express;
@@ -34,7 +35,6 @@ class App {
     this.app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     this.app.get('/docs.json', (_req: Request, res: Response) => res.json(swaggerDocument));
 
-
     this.app.use('/measurements', measurementRoutes);
 
     this.app.get('/health', (_req: Request, res: Response) => {
@@ -42,6 +42,14 @@ class App {
     });
 
     this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      if (err instanceof NotFoundError) {
+        res.status(404).json({ message: err.message });
+        return;
+      }
+      if (err instanceof ConflictError) {
+        res.status(409).json({ message: err.message });
+        return;
+      }
       const status: number = err.statusCode || err.status || 500;
       res.status(status).json({ message: err.message || 'Internal Server Error' });
     });
@@ -52,9 +60,9 @@ class App {
       await MongoDBConnection.connect();
       await stationEventConsumer.start();
       this.app.listen(this.port, () => {
-        console.log(`WeatherFlow - Alerting API is running on port ${this.port}`);
-        console.log(`Swagger UI:   http://localhost:${this.port}/docs`);
-        console.log(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
+        console.info(`WeatherFlow - Alerting API is running on port ${this.port}`);
+        console.info(`Swagger UI:   http://localhost:${this.port}/docs`);
+        console.info(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
       });
     } catch (error) {
       console.error('Failed to start application:', error);

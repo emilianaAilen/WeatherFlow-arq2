@@ -12,7 +12,6 @@ describe('ClimateMeasurementRepository', () => {
   });
 
   describe('filterMeasurementsBy', () => {
-
     it('should build query with humidity and pressure filters', async () => {
       const mockExec = jest.fn().mockResolvedValue([]);
       const mockFind = jest.fn().mockReturnValue({ exec: mockExec });

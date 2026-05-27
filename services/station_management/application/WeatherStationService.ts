@@ -1,5 +1,11 @@
 import crypto from 'crypto';
-import { WeatherStation, Location, StationStatusType } from '@/domain';
+import {
+  WeatherStation,
+  Location,
+  StationStatusType,
+  NotFoundError,
+  ConflictError,
+} from '@/domain';
 import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStationRepository';
 import { IUserRepository } from '@/infrastructure/ports/IUserRepository';
 import { IStationEventPublisher } from '@/infrastructure/ports/IStationEventPublisher';
@@ -22,19 +28,18 @@ export class WeatherStationService implements WeatherStationPort {
     return this.weatherStationRepository.getAll();
   }
 
-  async updateWeatherStation(id: string, dto: UpdateWeatherStationRequest): Promise<WeatherStation> {
+  async updateWeatherStation(
+    id: string,
+    dto: UpdateWeatherStationRequest,
+  ): Promise<WeatherStation> {
     const existing = await this.weatherStationRepository.findById(id);
     if (!existing) {
-      const error = new Error('Weather station not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('Weather station not found');
     }
     if (dto.name && dto.name !== existing.name) {
       const nameTaken = await this.weatherStationRepository.findStationByName(dto.name);
       if (nameTaken) {
-        const error = new Error('A weather station with that name already exists');
-        (error as any).statusCode = 409;
-        throw error;
+        throw new ConflictError('A weather station with that name already exists');
       }
     }
     const updated = WeatherStation.create(
@@ -55,9 +60,7 @@ export class WeatherStationService implements WeatherStationPort {
   async deleteStation(id: string): Promise<void> {
     const existing = await this.weatherStationRepository.findById(id);
     if (!existing) {
-      const error = new Error('Weather station not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('Weather station not found');
     }
 
     await this.weatherStationRepository.remove(id);
@@ -71,15 +74,11 @@ export class WeatherStationService implements WeatherStationPort {
   async createWeatherStation(dto: CreateWeatherStationRequest): Promise<WeatherStation> {
     const owner = await this.userRepository.findById(dto.ownerId);
     if (!owner) {
-      const error = new Error('Owner not found');
-      (error as any).statusCode = 404;
-      throw error;
+      throw new NotFoundError('Owner not found');
     }
     const existing = await this.weatherStationRepository.findStationByName(dto.name);
     if (existing) {
-      const error = new Error('A weather station with that name already exists');
-      (error as any).statusCode = 409;
-      throw error;
+      throw new ConflictError('A weather station with that name already exists');
     }
     const id = crypto.randomUUID();
     const station = WeatherStation.create(

@@ -15,21 +15,35 @@ export const CreateWeatherStationRequestSchema = z
     name: z.string().min(1).openapi({ example: 'Station Alpha', description: 'Station name' }),
     location: LocationSchema,
     model: z.string().min(1).openapi({ example: 'ModelX', description: 'Sensor model identifier' }),
-    ownerId: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000', description: 'UUID of the owning user' }),
+    ownerId: z.uuid().openapi({
+      example: '550e8400-e29b-41d4-a716-446655440000',
+      description: 'UUID of the owning user',
+    }),
   })
   .openapi('CreateWeatherStationRequest');
 
 export const UpdateWeatherStationRequestSchema = z
   .object({
-    name: z.string().min(1).optional().openapi({ example: 'Station Beta', description: 'Station name' }),
+    name: z
+      .string()
+      .min(1)
+      .optional()
+      .openapi({ example: 'Station Beta', description: 'Station name' }),
     location: z
       .object({
         latitude: z.number().min(-90).max(90).openapi({ example: -34.6 }),
         longitude: z.number().min(-180).max(180).openapi({ example: -58.4 }),
       })
       .optional(),
-    model: z.string().min(1).optional().openapi({ example: 'ModelY', description: 'Sensor model identifier' }),
-    status: z.enum(['Active', 'Inactive']).optional().openapi({ example: 'Inactive', description: 'Station status' }),
+    model: z
+      .string()
+      .min(1)
+      .optional()
+      .openapi({ example: 'ModelY', description: 'Sensor model identifier' }),
+    status: z
+      .enum(['Active', 'Inactive'])
+      .optional()
+      .openapi({ example: 'Inactive', description: 'Station status' }),
   })
   .openapi('UpdateWeatherStationRequest');
 

@@ -12,7 +12,7 @@ export class User {
     name: string,
     surname: string,
     email: string,
-    subscriptions: SubscriptionsList = SubscriptionsList.create()
+    subscriptions: SubscriptionsList = SubscriptionsList.create(),
   ) {
     this.id = id;
     this.name = name;
@@ -26,7 +26,7 @@ export class User {
     name: string,
     surname: string,
     email: string,
-    subscriptions: SubscriptionsList = SubscriptionsList.create()
+    subscriptions: SubscriptionsList = SubscriptionsList.create(),
   ): User {
     return new User(id, name, surname, email, subscriptions);
   }

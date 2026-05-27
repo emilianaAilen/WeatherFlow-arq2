@@ -19,7 +19,7 @@ export class ClimateMeasurement {
     atmosphericPressure: Pressure,
     dateTime: Date,
     alert: Alert,
-    stationId: string
+    stationId: string,
   ) {
     this.id = id;
     this.temperature = temperature;
@@ -36,7 +36,7 @@ export class ClimateMeasurement {
     humidity: number,
     atmosphericPressure: number,
     dateTime: Date,
-    stationId: string
+    stationId: string,
   ): ClimateMeasurement {
     const temperatureObj = new Temperature(temperature);
     const humidityObj = new Humidity(humidity);
@@ -50,7 +50,7 @@ export class ClimateMeasurement {
       pressureObj,
       dateTime,
       alertObj,
-      stationId
+      stationId,
     );
   }
 

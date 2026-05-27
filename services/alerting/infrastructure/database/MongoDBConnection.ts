@@ -18,7 +18,7 @@ export class MongoDBConnection {
         serverSelectionTimeoutMS: 5000,
       });
       this.instance = connection.connection;
-      console.log('MongoDB connected successfully');
+      console.info('MongoDB connected successfully');
       return this.instance;
     } catch (error) {
       console.error('MongoDB connection failed:', error);
@@ -30,7 +30,7 @@ export class MongoDBConnection {
     if (this.instance) {
       await mongoose.disconnect();
       this.instance = null;
-      console.log('MongoDB disconnected');
+      console.info('MongoDB disconnected');
     }
   }
 

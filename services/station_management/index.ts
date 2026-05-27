@@ -6,6 +6,7 @@ import { MongoDBConnection } from '@/infrastructure/database';
 import { userRoutes, weatherStationRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
 import { SubscriptionError } from '@/domain/errors/SubscriptionError';
+import { NotFoundError, ConflictError } from '@/domain';
 
 class App {
   private app: Express;
@@ -37,13 +38,16 @@ class App {
     this.app.use('/users', userRoutes);
     this.app.use('/weatherStations', weatherStationRoutes);
 
-
     this.app.get('/health', (_req: Request, res: Response) => {
       res.json({ status: 'OK', message: 'WeatherFlow - Station Management API is running' });
     });
 
     this.app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      if (err instanceof SubscriptionError) {
+      if (err instanceof NotFoundError) {
+        res.status(404).json({ message: err.message });
+        return;
+      }
+      if (err instanceof ConflictError || err instanceof SubscriptionError) {
         res.status(409).json({ message: err.message });
         return;
       }
@@ -56,9 +60,9 @@ class App {
     try {
       await MongoDBConnection.connect();
       this.app.listen(this.port, () => {
-        console.log(`WeatherFlow - Station Management API is running on port ${this.port}`);
-        console.log(`Swagger UI:   http://localhost:${this.port}/docs`);
-        console.log(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
+        console.info(`WeatherFlow - Station Management API is running on port ${this.port}`);
+        console.info(`Swagger UI:   http://localhost:${this.port}/docs`);
+        console.info(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
       });
     } catch (error) {
       console.error('Failed to start application:', error);

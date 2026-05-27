@@ -79,7 +79,9 @@ export class WeatherStationController {
     try {
       const { name } = req.query;
       if (!name || typeof name !== 'string' || name.trim() === '') {
-        res.status(400).json({ message: 'Query parameter "name" is required and must be a non-empty string' });
+        res
+          .status(400)
+          .json({ message: 'Query parameter "name" is required and must be a non-empty string' });
         return;
       }
       const station = await this.weatherStationService.searchByName(name.trim());

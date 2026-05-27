@@ -1,1 +1,1 @@
-export { ClimateMeasurementController } from "./ClimateMeasurementController";
+export { ClimateMeasurementController } from './ClimateMeasurementController';
