@@ -47,7 +47,7 @@ describe('StationManagement API Integration (E2E)', () => {
 
   it('should create a User and a Weather Station, and publish StationCreated event', async () => {
     const queueName = 'station-events';
-    await rabbitChannel.assertQueue(queueName, { durable: true });
+    await rabbitChannel.assertQueue(queueName, { durable: true, deadLetterExchange: 'station-events-dlx' });
 
     let receivedEvent: any = null;
     await rabbitChannel.consume(
