@@ -51,6 +51,7 @@ export class WeatherStationService implements WeatherStationPort {
       dto.model ?? existing.sensorModel,
       dto.status ?? existing.status,
       existing.ownerId,
+      dto.receivesExternalData ?? existing.receivesExternalData,
     );
     await this.weatherStationRepository.update(id, updated);
     await this.stationEventPublisher.publishStationUpdated(updated);
@@ -88,6 +89,7 @@ export class WeatherStationService implements WeatherStationPort {
       dto.model,
       StationStatusType.ACTIVE,
       dto.ownerId,
+      dto.receivesExternalData ?? false,
     );
     await this.weatherStationRepository.save(station);
     await this.stationEventPublisher.publishStationCreated(station);

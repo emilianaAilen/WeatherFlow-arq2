@@ -66,6 +66,24 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  ingesting:
+    build:
+      context: ./services/ingesting
+      target: builder
+    container_name: weatherflow-ingesting-dev
+    ports:
+      - "${PORT_INGESTING:-4002}:3000"
+    volumes:
+      - ./services/ingesting:/app
+    env_file:
+      - ./services/ingesting/.env
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
   ui:
     build:
       context: ./ui
