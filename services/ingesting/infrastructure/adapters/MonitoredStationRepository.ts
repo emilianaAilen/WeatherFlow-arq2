@@ -8,22 +8,24 @@ export class MonitoredStationRepository implements IMonitoredStationRepository {
       _id: station.id,
       name: station.name,
       alertingStationId: station.alertingStationId,
+      latitude: station.latitude,
+      longitude: station.longitude,
     });
   }
 
   async findById(id: string): Promise<MonitoredStation | null> {
     const doc = await MonitoredStationModel.findById(id).exec();
     if (!doc) return null;
-    return new MonitoredStation(doc._id, doc.name, doc.alertingStationId);
+    return new MonitoredStation(doc._id, doc.name, doc.alertingStationId, doc.latitude, doc.longitude);
   }
 
   async findAll(): Promise<MonitoredStation[]> {
     const docs = await MonitoredStationModel.find().exec();
-    return docs.map((doc) => new MonitoredStation(doc._id, doc.name, doc.alertingStationId));
+    return docs.map((doc) => new MonitoredStation(doc._id, doc.name, doc.alertingStationId, doc.latitude, doc.longitude));
   }
 
-  async update(id: string, name: string): Promise<void> {
-    await MonitoredStationModel.findByIdAndUpdate(id, { name }).exec();
+  async update(id: string, name: string, latitude: number, longitude: number): Promise<void> {
+    await MonitoredStationModel.findByIdAndUpdate(id, { name, latitude, longitude }).exec();
   }
 
   async remove(id: string): Promise<void> {
