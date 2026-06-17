@@ -8,12 +8,28 @@ const QUEUE = 'ingesting.station-events';
 const DLX_EXCHANGE = 'ingesting.station-events-dlx';
 const DLQ = 'ingesting.station-events-dlq';
 
-const EventPayloadSchema = z.object({
-  eventType: z.enum(['StationCreated', 'StationUpdated', 'StationDeleted']),
-  id: z.string(),
-  name: z.string().optional(),
-  receivesExternalData: z.boolean().optional(),
-});
+const EventPayloadSchema = z.discriminatedUnion('eventType', [
+  z.object({
+    eventType: z.literal('StationCreated'),
+    id: z.string(),
+    name: z.string(),
+    receivesExternalData: z.boolean(),
+    latitude: z.number(),
+    longitude: z.number(),
+  }),
+  z.object({
+    eventType: z.literal('StationUpdated'),
+    id: z.string(),
+    name: z.string(),
+    receivesExternalData: z.boolean(),
+    latitude: z.number(),
+    longitude: z.number(),
+  }),
+  z.object({
+    eventType: z.literal('StationDeleted'),
+    id: z.string(),
+  }),
+]);
 
 export class RabbitMQStationEventConsumer {
   private model: ChannelModel | null = null;
@@ -78,24 +94,22 @@ export class RabbitMQStationEventConsumer {
 
           switch (payload.eventType) {
             case 'StationCreated':
-              if (!payload.name) throw new Error('Name required for StationCreated');
               if (payload.receivesExternalData) {
                 await this.monitoredStationRepository.save(
-                  MonitoredStation.create(payload.id, payload.name),
+                  MonitoredStation.create(payload.id, payload.name, payload.latitude, payload.longitude),
                 );
                 console.info(`Station ${payload.id} registered for external data ingestion`);
               }
               break;
 
             case 'StationUpdated': {
-              if (!payload.name) throw new Error('Name required for StationUpdated');
               const existing = await this.monitoredStationRepository.findById(payload.id);
               if (payload.receivesExternalData) {
                 if (existing) {
-                  await this.monitoredStationRepository.update(payload.id, payload.name);
+                  await this.monitoredStationRepository.update(payload.id, payload.name, payload.latitude, payload.longitude);
                 } else {
                   await this.monitoredStationRepository.save(
-                    MonitoredStation.create(payload.id, payload.name),
+                    MonitoredStation.create(payload.id, payload.name, payload.latitude, payload.longitude),
                   );
                   console.info(`Station ${payload.id} registered for external data ingestion`);
                 }

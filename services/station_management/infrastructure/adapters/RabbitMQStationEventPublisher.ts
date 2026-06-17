@@ -55,6 +55,8 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         id: station.id,
         name: station.getName(),
         receivesExternalData: station.getReceivesExternalData(),
+        latitude: station.getLocation().getLatitude(),
+        longitude: station.getLocation().getLongitude(),
       }),
     );
     channel.publish(EXCHANGE, '', payload, { persistent: true });
@@ -68,6 +70,8 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         id: station.id,
         name: station.getName(),
         receivesExternalData: station.getReceivesExternalData(),
+        latitude: station.getLocation().getLatitude(),
+        longitude: station.getLocation().getLongitude(),
       }),
     );
     channel.publish(EXCHANGE, '', payload, { persistent: true });

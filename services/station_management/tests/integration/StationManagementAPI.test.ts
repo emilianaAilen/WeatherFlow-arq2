@@ -46,12 +46,13 @@ describe('StationManagement API Integration (E2E)', () => {
   });
 
   it('should create a User and a Weather Station, and publish StationCreated event', async () => {
-    const queueName = 'station-events';
-    await rabbitChannel.assertQueue(queueName, { durable: true, deadLetterExchange: 'station-events-dlx' });
+    await rabbitChannel.assertExchange('station-events', 'fanout', { durable: true });
+    const { queue: tempQueue } = await rabbitChannel.assertQueue('', { exclusive: true });
+    await rabbitChannel.bindQueue(tempQueue, 'station-events', '');
 
     let receivedEvent: any = null;
     await rabbitChannel.consume(
-      queueName,
+      tempQueue,
       (msg: any) => {
         if (msg) {
           receivedEvent = JSON.parse(msg.content.toString());
@@ -96,5 +97,7 @@ describe('StationManagement API Integration (E2E)', () => {
     expect(receivedEvent.eventType).toBe('StationCreated');
     expect(receivedEvent.id).toBe(stationId);
     expect(receivedEvent.name).toBe('Test E2E Station');
+    expect(receivedEvent.latitude).toBe(-34.6);
+    expect(receivedEvent.longitude).toBe(-58.4);
   });
 });
