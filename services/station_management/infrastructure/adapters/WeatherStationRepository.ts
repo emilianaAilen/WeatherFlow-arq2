@@ -14,6 +14,7 @@ export class WeatherStationRepository implements IWeatherStationRepository {
       doc.sensorModel,
       doc.status as StationStatusType,
       doc.ownerId.toString(),
+      doc.receivesExternalData,
     );
   }
 
@@ -28,6 +29,7 @@ export class WeatherStationRepository implements IWeatherStationRepository {
       sensorModel: station.sensorModel,
       status: station.status,
       ownerId: station.ownerId,
+      receivesExternalData: station.receivesExternalData,
     });
   }
 
@@ -46,6 +48,7 @@ export class WeatherStationRepository implements IWeatherStationRepository {
       sensorModel: station.sensorModel,
       status: station.status,
       ownerId: station.ownerId,
+      receivesExternalData: station.receivesExternalData,
     }).exec();
   }
 

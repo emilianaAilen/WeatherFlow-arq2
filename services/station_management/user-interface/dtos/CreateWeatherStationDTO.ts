@@ -5,6 +5,7 @@ export interface CreateWeatherStationRequest {
   location: { latitude: number; longitude: number };
   model: string;
   ownerId: string;
+  receivesExternalData?: boolean;
 }
 
 export const CreateWeatherStationSchema = z.object({
@@ -15,4 +16,5 @@ export const CreateWeatherStationSchema = z.object({
   }),
   model: z.string().min(1, 'Model is required'),
   ownerId: z.uuid('ownerId must be a valid UUID'),
+  receivesExternalData: z.boolean().optional().default(false),
 });

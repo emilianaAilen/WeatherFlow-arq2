@@ -11,6 +11,7 @@ export interface IWeatherStationDocument extends Document {
   sensorModel: string;
   status: StationStatusType;
   ownerId: string;
+  receivesExternalData: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +27,7 @@ const weatherStationSchema = new Schema<IWeatherStationDocument>(
     sensorModel: { type: String, required: true },
     status: { type: String, enum: Object.values(StationStatusType), required: true },
     ownerId: { type: String, ref: 'User', required: true },
+    receivesExternalData: { type: Boolean, required: true, default: false },
   },
   { timestamps: true },
 );

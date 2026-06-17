@@ -8,7 +8,7 @@ For an in-depth explanation of why the system is split into multiple microservic
 
 ## Services
 
-The platform is split into two backend microservices and a frontend UI:
+The platform is split into three backend microservices and a frontend UI:
 
 1. **[Station Management](file://services/station_management):** Manages users, weather stations, and subscriptions.
    - **Port:** 4000 (internal 3000)
@@ -18,7 +18,11 @@ The platform is split into two backend microservices and a frontend UI:
    - **Port:** 4001 (internal 3000)
    - **Database:** `alerting`
    - **Swagger:** http://localhost:4001/docs
-3. **[UI](file://ui):** React + Vite frontend for managing stations, users, and measurements.
+3. **[Ingesting](file://services/ingesting):** Tracks which weather stations are configured to receive external data ingestion, based on the `receivesExternalData` flag set at station creation/update and ingests climate measurements through Alerting service.
+   - **Port:** 4002 (internal 3000)
+   - **Database:** `ingesting`
+   - **Swagger:** http://localhost:4002/docs
+4. **[UI](file://ui):** React + Vite frontend for managing stations, users, and measurements.
    - **Port:** 3000
    - **App:** http://localhost:3000
 
@@ -60,6 +64,8 @@ Each service and the UI can be run independently. You will need Node.js (v22+), 
    cd services/station_management
    # or
    cd services/alerting
+   # or
+   cd services/ingesting
    ```
 2. Copy `.env.example` to `.env` and fill in the values:
    ```bash
@@ -97,7 +103,7 @@ Each microservice has its own test suite. We use **Testcontainers** to spin up e
 Make sure your Docker daemon is running before executing these.
 
 ```bash
-cd services/station_management # or services/alerting
+cd services/station_management # or services/alerting or services/ingesting
 npm run test               # Unit tests
 npm run test:integration   # Integration tests with Testcontainers
 ```
@@ -127,6 +133,7 @@ This script will:
 ├── ui/                          # React + Vite frontend
 ├── services/
 │   ├── alerting/                # Alerting microservice
+│   ├── ingesting/               # Ingesting microservice
 │   └── station_management/      # Station Management microservice
 └── tests/
     └── e2e/                     # Cross-service End-to-End tests

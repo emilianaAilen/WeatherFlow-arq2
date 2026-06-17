@@ -2,7 +2,7 @@ import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { WeatherStation } from '@/domain';
 import { IStationEventPublisher } from '@/infrastructure/ports';
 
-const QUEUE = 'station-events';
+const EXCHANGE = 'station-events';
 
 export class RabbitMQStationEventPublisher implements IStationEventPublisher {
   private model: ChannelModel | null = null;
@@ -38,10 +38,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         this.channel = null;
       });
 
-      await this.channel.assertQueue(QUEUE, {
-        durable: true,
-        deadLetterExchange: 'station-events-dlx',
-      });
+      await this.channel.assertExchange(EXCHANGE, 'fanout', { durable: true });
       return this.channel;
     } catch (error) {
       this.model = null;
@@ -57,9 +54,10 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         eventType: 'StationCreated',
         id: station.id,
         name: station.getName(),
+        receivesExternalData: station.getReceivesExternalData(),
       }),
     );
-    channel.sendToQueue(QUEUE, payload, { persistent: true });
+    channel.publish(EXCHANGE, '', payload, { persistent: true });
   }
 
   async publishStationUpdated(station: WeatherStation): Promise<void> {
@@ -69,9 +67,10 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         eventType: 'StationUpdated',
         id: station.id,
         name: station.getName(),
+        receivesExternalData: station.getReceivesExternalData(),
       }),
     );
-    channel.sendToQueue(QUEUE, payload, { persistent: true });
+    channel.publish(EXCHANGE, '', payload, { persistent: true });
   }
 
   async publishStationDeleted(stationId: string): Promise<void> {
@@ -82,7 +81,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         id: stationId,
       }),
     );
-    channel.sendToQueue(QUEUE, payload, { persistent: true });
+    channel.publish(EXCHANGE, '', payload, { persistent: true });
   }
 
   async close(): Promise<void> {
