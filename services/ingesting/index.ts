@@ -5,7 +5,7 @@ import swaggerUi from 'swagger-ui-express';
 import { MongoDBConnection } from '@/infrastructure/database';
 import { monitoredStationRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
-import { stationEventConsumer } from '@/infrastructure/container';
+import { stationEventConsumer, ingestionScheduler } from '@/infrastructure/container';
 import { NotFoundError } from '@/domain';
 
 class App {
@@ -55,6 +55,8 @@ class App {
     try {
       await MongoDBConnection.connect();
       await stationEventConsumer.start();
+      ingestionScheduler.start();
+      process.on('SIGTERM', () => ingestionScheduler.stop());
       this.app.listen(this.port, () => {
         console.info(`WeatherFlow - Ingesting API is running on port ${this.port}`);
         console.info(`Swagger UI:   http://localhost:${this.port}/docs`);

@@ -54,3 +54,33 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+
+  owm-mock:
+    build:
+      context: ./tests/e2e/mock-owm
+    container_name: weatherflow-owm-mock-e2e
+
+  ingesting:
+    build:
+      context: ./services/ingesting
+      target: builder
+    container_name: weatherflow-ingesting-e2e
+    ports:
+      - "4012:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=e2e
+      - MONGODB_URI=mongodb://admin:secret-password-123@mongodb:27017/weatherflow?authSource=admin
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - OWM_API_KEY=test-key
+      - OWM_BASE_URL=http://owm-mock:9090/data/2.5
+      - OWM_CRON=* * * * * *
+      - ALERTING_BASE_URL=http://alerting:3000
+    command: npm run dev
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      owm-mock:
+        condition: service_started

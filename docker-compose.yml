@@ -82,6 +82,10 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-secret}@mongodb:27017/ingesting?authSource=admin
       RABBITMQ_URL: amqp://rabbitmq:5672
+      OWM_API_KEY: ${OWM_API_KEY}
+      OWM_CRON: ${OWM_CRON:-*/5 * * * *}
+      OWM_BASE_URL: ${OWM_BASE_URL:-https://api.openweathermap.org/data/2.5}
+      ALERTING_BASE_URL: http://alerting:3000
     depends_on:
       mongodb:
         condition: service_started
