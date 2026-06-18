@@ -11,5 +11,7 @@ export const MonitoredStationResponseSchema = z
       .string()
       .uuid()
       .openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
+    latitude: z.number().openapi({ example: -34.6037 }),
+    longitude: z.number().openapi({ example: -58.3816 }),
   })
   .openapi('MonitoredStation');

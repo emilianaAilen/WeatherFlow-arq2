@@ -33,8 +33,10 @@ describe('ClimateMeasurement API Integration (E2E)', () => {
     await MongoDBConnection.connect();
     await stationEventConsumer.start();
 
+    // Connect after stationEventConsumer.start() so the exchange already exists
     rabbitConnection = await amqplib.connect(process.env.RABBITMQ_URL as string);
     rabbitChannel = await rabbitConnection.createChannel();
+    await rabbitChannel.assertExchange('station-events', 'fanout', { durable: true });
   }, 60000);
 
   afterAll(async () => {
@@ -57,11 +59,7 @@ describe('ClimateMeasurement API Integration (E2E)', () => {
       name: 'E2E Test Station',
     };
 
-    await rabbitChannel.assertQueue('station-events', {
-      durable: true,
-      deadLetterExchange: 'station-events-dlx',
-    });
-    rabbitChannel.sendToQueue('station-events', Buffer.from(JSON.stringify(event)));
+    rabbitChannel.publish('station-events', '', Buffer.from(JSON.stringify(event)));
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 

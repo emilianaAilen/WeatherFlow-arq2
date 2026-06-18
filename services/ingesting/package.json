@@ -40,6 +40,9 @@
       "**/*.test.ts"
     ]
   },
+  "overrides": {
+    "archiver": "^7"
+  },
   "devDependencies": {
     "@testcontainers/mongodb": "^12.0.0",
     "@testcontainers/rabbitmq": "^12.0.0",
