@@ -161,6 +161,7 @@ describe('StationIngestion Integration', () => {
 
   it('should send malformed event to DLQ and not register the station', async () => {
     const badId = '550e8400-e29b-41d4-a716-446655440099';
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
     // Missing latitude/longitude — Zod discriminated union will reject this
     publishEvent({
@@ -171,6 +172,12 @@ describe('StationIngestion Integration', () => {
     });
 
     await waitForProcessing();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error processing station event, moving to DLQ',
+      expect.any(Error),
+    );
+    consoleErrorSpy.mockRestore();
 
     const res = await request(app.getExpressApp()).get(`/monitored-stations/${badId}`);
     expect(res.status).toBe(404);

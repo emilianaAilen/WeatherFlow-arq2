@@ -7,8 +7,8 @@ echo "======================================"
 
 docker-compose -f docker-compose.e2e.yml up -d --build
 
-echo "Waiting for APIs to be ready on ports 4010 and 4011..."
-npx wait-on tcp:4010 tcp:4011 -t 30000
+echo "Waiting for APIs to be ready on ports 4010, 4011 and 4012..."
+npx wait-on tcp:4010 tcp:4011 tcp:4012 -t 30000
 
 echo "======================================"
 echo "Running E2E Tests..."
