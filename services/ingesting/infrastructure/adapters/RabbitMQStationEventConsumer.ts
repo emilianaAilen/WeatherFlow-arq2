@@ -2,6 +2,7 @@ import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { z } from 'zod';
 import { IMonitoredStationRepository } from '@/infrastructure/ports';
 import { MonitoredStation } from '@/domain';
+import { logger } from '@/infrastructure/logger';
 
 const EXCHANGE = 'station-events';
 const QUEUE = 'ingesting.station-events';
@@ -49,36 +50,33 @@ export class RabbitMQStationEventConsumer {
       this.model = await amqplib.connect(this.url);
 
       this.model.on('error', (err) => {
-        console.error('RabbitMQ consumer connection error', err);
+        logger.error({ err }, 'RabbitMQ station event consumer connection error');
         this.reconnect();
       });
 
       this.model.on('close', () => {
-        console.info('RabbitMQ consumer connection closed');
+        logger.info('RabbitMQ station event consumer connection closed');
         this.reconnect();
       });
 
       this.channel = await this.model.createChannel();
 
       this.channel.on('error', (err) => {
-        console.error('RabbitMQ consumer channel error', err);
+        logger.error({ err }, 'RabbitMQ station event consumer channel error');
         this.reconnect();
       });
 
       this.channel.on('close', () => {
-        console.info('RabbitMQ consumer channel closed');
+        logger.info('RabbitMQ station event consumer channel closed');
         this.reconnect();
       });
 
-      // Assert source fanout exchange
       await this.channel.assertExchange(EXCHANGE, 'fanout', { durable: true });
 
-      // Assert DLX and DLQ
       await this.channel.assertExchange(DLX_EXCHANGE, 'fanout', { durable: true });
       await this.channel.assertQueue(DLQ, { durable: true });
       await this.channel.bindQueue(DLQ, DLX_EXCHANGE, '');
 
-      // Assert dedicated queue for this consumer and bind to source exchange
       await this.channel.assertQueue(QUEUE, {
         durable: true,
         deadLetterExchange: DLX_EXCHANGE,
@@ -98,7 +96,7 @@ export class RabbitMQStationEventConsumer {
                 await this.monitoredStationRepository.save(
                   MonitoredStation.create(payload.id, payload.name, payload.latitude, payload.longitude),
                 );
-                console.info(`Station ${payload.id} registered for external data ingestion`);
+                logger.info({ stationId: payload.id, name: payload.name }, 'Station registered for external data ingestion');
               }
               break;
 
@@ -111,12 +109,12 @@ export class RabbitMQStationEventConsumer {
                   await this.monitoredStationRepository.save(
                     MonitoredStation.create(payload.id, payload.name, payload.latitude, payload.longitude),
                   );
-                  console.info(`Station ${payload.id} registered for external data ingestion`);
+                  logger.info({ stationId: payload.id, name: payload.name }, 'Station registered for external data ingestion');
                 }
               } else {
                 if (existing) {
                   await this.monitoredStationRepository.remove(payload.id);
-                  console.info(`Station ${payload.id} removed from external data ingestion`);
+                  logger.info({ stationId: payload.id }, 'Station removed from external data ingestion');
                 }
               }
               break;
@@ -124,19 +122,20 @@ export class RabbitMQStationEventConsumer {
 
             case 'StationDeleted':
               await this.monitoredStationRepository.remove(payload.id);
+              logger.info({ stationId: payload.id }, 'Station removed from external data ingestion');
               break;
           }
 
           this.channel?.ack(msg);
         } catch (error) {
-          console.error('Error processing station event, moving to DLQ', error);
+          logger.error({ error: (error as Error).message }, 'Error processing station event, moving to DLQ');
           this.channel?.nack(msg, false, false);
         }
       });
 
-      console.info('RabbitMQ StationEventConsumer (ingesting) started successfully');
+      logger.info('RabbitMQ StationEventConsumer (ingesting) started successfully');
     } catch (error) {
-      console.error('Failed to start RabbitMQ consumer:', error);
+      logger.error({ error: (error as Error).message }, 'Failed to start station event consumer');
       this.reconnect();
     } finally {
       this.reconnecting = false;
@@ -147,9 +146,9 @@ export class RabbitMQStationEventConsumer {
     if (this.reconnecting) return;
     this.model = null;
     this.channel = null;
-    console.info('Attempting to reconnect RabbitMQ consumer in 5 seconds...');
+    logger.info('Attempting to reconnect station event consumer in 5 seconds...');
     setTimeout(() => {
-      this.start().catch(console.error);
+      this.start().catch((err) => logger.error({ err }, 'Reconnect failed'));
     }, 5000);
   }
 

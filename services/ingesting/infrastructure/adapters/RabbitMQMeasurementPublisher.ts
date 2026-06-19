@@ -1,5 +1,6 @@
 import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { IMeasurementPublisher, MeasurementMessage } from '@/infrastructure/ports';
+import { logger } from '@/infrastructure/logger';
 
 const EXCHANGE = 'ingested-measurements';
 
@@ -16,12 +17,12 @@ export class RabbitMQMeasurementPublisher implements IMeasurementPublisher {
       if (!this.model) {
         this.model = await amqplib.connect(this.url);
         this.model.on('error', (err) => {
-          console.error('RabbitMQ measurement publisher connection error', err);
+          logger.error({ err }, 'RabbitMQ measurement publisher connection error');
           this.model = null;
           this.channel = null;
         });
         this.model.on('close', () => {
-          console.info('RabbitMQ measurement publisher connection closed');
+          logger.info('RabbitMQ measurement publisher connection closed');
           this.model = null;
           this.channel = null;
         });
@@ -29,11 +30,11 @@ export class RabbitMQMeasurementPublisher implements IMeasurementPublisher {
 
       this.channel = await this.model.createChannel();
       this.channel.on('error', (err) => {
-        console.error('RabbitMQ measurement publisher channel error', err);
+        logger.error({ err }, 'RabbitMQ measurement publisher channel error');
         this.channel = null;
       });
       this.channel.on('close', () => {
-        console.info('RabbitMQ measurement publisher channel closed');
+        logger.info('RabbitMQ measurement publisher channel closed');
         this.channel = null;
       });
 
@@ -50,6 +51,7 @@ export class RabbitMQMeasurementPublisher implements IMeasurementPublisher {
     const channel = await this.getChannel();
     const payload = Buffer.from(JSON.stringify(message));
     channel.publish(EXCHANGE, '', payload, { persistent: true });
+    logger.info({ stationId: message.stationId, exchange: EXCHANGE }, 'Measurement published to RabbitMQ');
   }
 
   async close(): Promise<void> {

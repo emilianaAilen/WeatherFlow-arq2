@@ -1,6 +1,7 @@
 import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { z } from 'zod';
 import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasurementPort';
+import { logger } from '@/infrastructure/logger';
 
 const EXCHANGE = 'ingested-measurements';
 const QUEUE = 'alerting.ingested-measurements';
@@ -32,24 +33,24 @@ export class RabbitMQMeasurementConsumer {
       this.model = await amqplib.connect(this.url);
 
       this.model.on('error', (err) => {
-        console.error('RabbitMQ measurement consumer connection error', err);
+        logger.error({ err }, 'RabbitMQ measurement consumer connection error');
         this.reconnect();
       });
 
       this.model.on('close', () => {
-        console.info('RabbitMQ measurement consumer connection closed');
+        logger.info('RabbitMQ measurement consumer connection closed');
         this.reconnect();
       });
 
       this.channel = await this.model.createChannel();
 
       this.channel.on('error', (err) => {
-        console.error('RabbitMQ measurement consumer channel error', err);
+        logger.error({ err }, 'RabbitMQ measurement consumer channel error');
         this.reconnect();
       });
 
       this.channel.on('close', () => {
-        console.info('RabbitMQ measurement consumer channel closed');
+        logger.info('RabbitMQ measurement consumer channel closed');
         this.reconnect();
       });
 
@@ -73,18 +74,18 @@ export class RabbitMQMeasurementConsumer {
           const payload = MeasurementPayloadSchema.parse(rawPayload);
 
           await this.measurementService.createMeasurement(payload);
-          console.info(`Measurement created for station ${payload.stationId}`);
+          logger.info({ stationId: payload.stationId }, 'Measurement consumed from RabbitMQ');
 
           this.channel?.ack(msg);
         } catch (error) {
-          console.error('Error processing ingested measurement, moving to DLQ', error);
+          logger.error({ error: (error as Error).message }, 'Error processing ingested measurement, moving to DLQ');
           this.channel?.nack(msg, false, false);
         }
       });
 
-      console.info('RabbitMQ MeasurementConsumer (alerting) started successfully');
+      logger.info('RabbitMQ MeasurementConsumer (alerting) started successfully');
     } catch (error) {
-      console.error('Failed to start measurement consumer:', error);
+      logger.error({ error: (error as Error).message }, 'Failed to start measurement consumer');
       this.reconnect();
     } finally {
       this.reconnecting = false;
@@ -95,9 +96,9 @@ export class RabbitMQMeasurementConsumer {
     if (this.reconnecting) return;
     this.model = null;
     this.channel = null;
-    console.info('Attempting to reconnect measurement consumer in 5 seconds...');
+    logger.info('Attempting to reconnect measurement consumer in 5 seconds...');
     setTimeout(() => {
-      this.start().catch(console.error);
+      this.start().catch((err) => logger.error({ err }, 'Reconnect failed'));
     }, 5000);
   }
 

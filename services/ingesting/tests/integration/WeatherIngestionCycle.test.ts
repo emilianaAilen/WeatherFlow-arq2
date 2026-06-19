@@ -2,6 +2,7 @@ import http from 'http';
 import { AddressInfo } from 'net';
 import { MongoDBContainer } from '@testcontainers/mongodb';
 import { MonitoredStation } from '../../domain/entities/MonitoredStation/MonitoredStation';
+import { logger } from '../../infrastructure/logger';
 
 describe('WeatherIngestionCycle Integration', () => {
   let mongoContainer: any;
@@ -98,7 +99,7 @@ describe('WeatherIngestionCycle Integration', () => {
   });
 
   it('should skip a station when OWM returns an error and continue with others (bulkhead)', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => false);
     const repo = new MonitoredStationRepository();
     await repo.save(MonitoredStation.create('station-1', 'Station A', 0, 0));
     await repo.save(MonitoredStation.create('station-2', 'Station B', 10.5, 20.3));
@@ -107,10 +108,10 @@ describe('WeatherIngestionCycle Integration', () => {
     await service.runIngestionCycle();
 
     expect(publishedMessages).toHaveLength(0);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('station-1'),
-      expect.any(Error),
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ stationId: 'station-1' }),
+      expect.any(String),
     );
-    consoleErrorSpy.mockRestore();
+    loggerErrorSpy.mockRestore();
   });
 });

@@ -1,6 +1,7 @@
 import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { ClimateMeasurement } from '@/domain';
 import { INotificationQueue } from '@/infrastructure/ports';
+import { logger } from '@/infrastructure/logger';
 
 const QUEUE = 'climate-alerts';
 
@@ -17,12 +18,12 @@ export class RabbitMQNotificationQueue implements INotificationQueue {
       if (!this.model) {
         this.model = await amqplib.connect(this.url);
         this.model.on('error', (err) => {
-          console.error('RabbitMQ connection error', err);
+          logger.error({ err }, 'RabbitMQ notification queue connection error');
           this.model = null;
           this.channel = null;
         });
         this.model.on('close', () => {
-          console.info('RabbitMQ connection closed');
+          logger.info('RabbitMQ notification queue connection closed');
           this.model = null;
           this.channel = null;
         });
@@ -30,11 +31,11 @@ export class RabbitMQNotificationQueue implements INotificationQueue {
 
       this.channel = await this.model.createChannel();
       this.channel.on('error', (err) => {
-        console.error('RabbitMQ channel error', err);
+        logger.error({ err }, 'RabbitMQ notification queue channel error');
         this.channel = null;
       });
       this.channel.on('close', () => {
-        console.info('RabbitMQ channel closed');
+        logger.info('RabbitMQ notification queue channel closed');
         this.channel = null;
       });
 
@@ -61,6 +62,7 @@ export class RabbitMQNotificationQueue implements INotificationQueue {
       }),
     );
     channel.sendToQueue(QUEUE, payload, { persistent: true });
+    logger.info({ stationId: measurement.stationId, alertType: measurement.alert.getType() }, 'Alert notification published');
   }
 
   async close(): Promise<void> {

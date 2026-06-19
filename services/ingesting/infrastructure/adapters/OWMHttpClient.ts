@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { IWeatherClient, WeatherData } from '@/infrastructure/ports';
 import { CircuitBreaker } from '@/infrastructure/fault-tolerance/CircuitBreaker';
+import { logger } from '@/infrastructure/logger';
 
 const OWMResponseSchema = z.object({
   main: z.object({
@@ -32,6 +33,8 @@ export class OWMHttpClient implements IWeatherClient {
   async fetchWeather(latitude: number, longitude: number): Promise<WeatherData> {
     const url = `${this.baseUrl}/weather?lat=${latitude}&lon=${longitude}&appid=${this.apiKey}&units=metric`;
 
+    logger.debug({ lat: latitude, lon: longitude }, 'Fetching weather from OWM');
+
     return this.circuitBreaker.execute(async () => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -40,17 +43,26 @@ export class OWMHttpClient implements IWeatherClient {
         const response = await fetch(url, { signal: controller.signal });
 
         if (!response.ok) {
+          logger.error({ lat: latitude, lon: longitude, status: response.status }, 'OWM request failed');
           throw new OWMApiError(`OWM API responded with status ${response.status}`);
         }
 
         const json = await response.json();
         const parsed = OWMResponseSchema.parse(json);
 
-        return {
+        const data: WeatherData = {
           temperature: parsed.main.temp,
           humidity: parsed.main.humidity,
           pressure: parsed.main.pressure,
         };
+
+        logger.info({ lat: latitude, lon: longitude, ...data }, 'OWM data received');
+        return data;
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          logger.error({ lat: latitude, lon: longitude, timeoutMs: this.timeoutMs }, 'OWM request timed out');
+        }
+        throw error;
       } finally {
         clearTimeout(timer);
       }

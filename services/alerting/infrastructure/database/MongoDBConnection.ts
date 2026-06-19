@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { logger } from '@/infrastructure/logger';
 
 export class MongoDBConnection {
   private static instance: mongoose.Connection | null = null;
@@ -18,10 +19,10 @@ export class MongoDBConnection {
         serverSelectionTimeoutMS: 5000,
       });
       this.instance = connection.connection;
-      console.info('MongoDB connected successfully');
+      logger.info('MongoDB connected');
       return this.instance;
     } catch (error) {
-      console.error('MongoDB connection failed:', error);
+      logger.error({ error }, 'MongoDB connection failed');
       throw error;
     }
   }
@@ -30,7 +31,7 @@ export class MongoDBConnection {
     if (this.instance) {
       await mongoose.disconnect();
       this.instance = null;
-      console.info('MongoDB disconnected');
+      logger.info('MongoDB disconnected');
     }
   }
 

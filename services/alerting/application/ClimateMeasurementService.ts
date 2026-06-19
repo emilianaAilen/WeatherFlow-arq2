@@ -8,6 +8,7 @@ import { CreateMeasurementRequest } from '@/user-interface/dtos/CreateMeasuremen
 import { UpdateMeasurementRequest } from '@/user-interface/dtos/UpdateMeasurementDTO';
 import { MeasurementFilters } from '@/user-interface/dtos/MeasurementFiltersDTO';
 import { RepositoryMeasurementFilters } from '@/infrastructure/types';
+import { logger } from '@/infrastructure/logger';
 
 export class ClimateMeasurementService implements ClimateMeasurementPort {
   constructor(
@@ -83,9 +84,21 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
       dto.stationId,
     );
     await this.climateMeasurementRepository.save(measurement);
+
+    logger.info(
+      { stationId: dto.stationId, temperature: dto.temperature, humidity: dto.humidity, pressure: dto.atmosphericPressure },
+      'Measurement created',
+    );
+
     if (measurement.alert.isActiveAlert()) {
+      logger.warn(
+        { stationId: dto.stationId, alertType: measurement.alert.getType(),
+          temperature: dto.temperature, humidity: dto.humidity, pressure: dto.atmosphericPressure },
+        'Alert triggered',
+      );
       await this.notificationQueue.publish(measurement);
     }
+
     return measurement;
   }
 }
