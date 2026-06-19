@@ -2,7 +2,7 @@ import {
   MonitoredStationRepository,
   RabbitMQStationEventConsumer,
   OWMHttpClient,
-  AlertingHttpClient,
+  RabbitMQMeasurementPublisher,
 } from './adapters';
 import { IngestionScheduler } from './adapters/IngestionScheduler';
 import { CircuitBreaker } from './fault-tolerance/CircuitBreaker';
@@ -34,14 +34,14 @@ const owmClient = new OWMHttpClient(
   process.env.OWM_BASE_URL,
 );
 
-const alertingClient = new AlertingHttpClient(
-  process.env.ALERTING_BASE_URL ?? 'http://alerting:3000',
+const measurementPublisher = new RabbitMQMeasurementPublisher(
+  process.env.RABBITMQ_URL ?? 'amqp://localhost',
 );
 
 const weatherIngestionService = new WeatherIngestionService(
   monitoredStationRepository,
   owmClient,
-  alertingClient,
+  measurementPublisher,
 );
 
 export const ingestionScheduler = new IngestionScheduler(

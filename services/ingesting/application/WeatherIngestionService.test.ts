@@ -1,5 +1,5 @@
 import { WeatherIngestionService } from './WeatherIngestionService';
-import { IMonitoredStationRepository, IWeatherClient, IAlertingClient } from '@/infrastructure/ports';
+import { IMonitoredStationRepository, IWeatherClient, IMeasurementPublisher } from '@/infrastructure/ports';
 import { MonitoredStation } from '@/domain';
 
 const makeStation = (id: string, lat: number, lon: number): MonitoredStation =>
@@ -7,8 +7,8 @@ const makeStation = (id: string, lat: number, lon: number): MonitoredStation =>
 
 describe('WeatherIngestionService', () => {
   let monitoredStationRepository: jest.Mocked<IMonitoredStationRepository>;
-  let owmClient: jest.Mocked<IWeatherClient>;
-  let alertingClient: jest.Mocked<IAlertingClient>;
+  let weatherClient: jest.Mocked<IWeatherClient>;
+  let measurementPublisher: jest.Mocked<IMeasurementPublisher>;
   let service: WeatherIngestionService;
 
   const weatherData = { temperature: 22.5, humidity: 55, pressure: 1015 };
@@ -22,36 +22,36 @@ describe('WeatherIngestionService', () => {
       remove: jest.fn(),
     };
 
-    owmClient = { fetchWeather: jest.fn() };
-    alertingClient = { postMeasurement: jest.fn() };
+    weatherClient = { fetchWeather: jest.fn() };
+    measurementPublisher = { publish: jest.fn() };
 
-    service = new WeatherIngestionService(monitoredStationRepository, owmClient, alertingClient);
+    service = new WeatherIngestionService(monitoredStationRepository, weatherClient, measurementPublisher);
   });
 
   afterEach(() => jest.clearAllMocks());
 
-  it('should fetch and forward weather data for each station', async () => {
+  it('should fetch weather and publish measurement for each station', async () => {
     const stations = [makeStation('s-1', -34.6037, -58.3816), makeStation('s-2', 10.5, 20.3)];
     monitoredStationRepository.findAll.mockResolvedValue(stations);
-    owmClient.fetchWeather.mockResolvedValue(weatherData);
-    alertingClient.postMeasurement.mockResolvedValue(undefined);
+    weatherClient.fetchWeather.mockResolvedValue(weatherData);
+    measurementPublisher.publish.mockResolvedValue(undefined);
 
     await service.runIngestionCycle();
 
-    expect(owmClient.fetchWeather).toHaveBeenCalledTimes(2);
-    expect(owmClient.fetchWeather).toHaveBeenCalledWith(-34.6037, -58.3816);
-    expect(owmClient.fetchWeather).toHaveBeenCalledWith(10.5, 20.3);
-    expect(alertingClient.postMeasurement).toHaveBeenCalledTimes(2);
+    expect(weatherClient.fetchWeather).toHaveBeenCalledTimes(2);
+    expect(weatherClient.fetchWeather).toHaveBeenCalledWith(-34.6037, -58.3816);
+    expect(weatherClient.fetchWeather).toHaveBeenCalledWith(10.5, 20.3);
+    expect(measurementPublisher.publish).toHaveBeenCalledTimes(2);
   });
 
-  it('should map OWM response to alerting payload correctly', async () => {
+  it('should map weather data to measurement message correctly', async () => {
     monitoredStationRepository.findAll.mockResolvedValue([makeStation('s-1', 0, 0)]);
-    owmClient.fetchWeather.mockResolvedValue({ temperature: 30, humidity: 80, pressure: 990 });
-    alertingClient.postMeasurement.mockResolvedValue(undefined);
+    weatherClient.fetchWeather.mockResolvedValue({ temperature: 30, humidity: 80, pressure: 990 });
+    measurementPublisher.publish.mockResolvedValue(undefined);
 
     await service.runIngestionCycle();
 
-    expect(alertingClient.postMeasurement).toHaveBeenCalledWith({
+    expect(measurementPublisher.publish).toHaveBeenCalledWith({
       temperature: 30,
       humidity: 80,
       atmosphericPressure: 990,
@@ -59,15 +59,15 @@ describe('WeatherIngestionService', () => {
     });
   });
 
-  it('should use alertingStationId (not id) as stationId in the payload', async () => {
+  it('should use alertingStationId as stationId in the published message', async () => {
     const station = new MonitoredStation('ingest-id', 'Station', 'alerting-id', 0, 0);
     monitoredStationRepository.findAll.mockResolvedValue([station]);
-    owmClient.fetchWeather.mockResolvedValue(weatherData);
-    alertingClient.postMeasurement.mockResolvedValue(undefined);
+    weatherClient.fetchWeather.mockResolvedValue(weatherData);
+    measurementPublisher.publish.mockResolvedValue(undefined);
 
     await service.runIngestionCycle();
 
-    expect(alertingClient.postMeasurement).toHaveBeenCalledWith(
+    expect(measurementPublisher.publish).toHaveBeenCalledWith(
       expect.objectContaining({ stationId: 'alerting-id' }),
     );
   });
@@ -76,31 +76,31 @@ describe('WeatherIngestionService', () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     const stations = [makeStation('s-1', 0, 0), makeStation('s-2', 10, 20)];
     monitoredStationRepository.findAll.mockResolvedValue(stations);
-    owmClient.fetchWeather
+    weatherClient.fetchWeather
       .mockRejectedValueOnce(new Error('OWM down'))
       .mockResolvedValueOnce(weatherData);
-    alertingClient.postMeasurement.mockResolvedValue(undefined);
+    measurementPublisher.publish.mockResolvedValue(undefined);
 
     await service.runIngestionCycle();
 
-    expect(owmClient.fetchWeather).toHaveBeenCalledTimes(2);
-    expect(alertingClient.postMeasurement).toHaveBeenCalledTimes(1);
+    expect(weatherClient.fetchWeather).toHaveBeenCalledTimes(2);
+    expect(measurementPublisher.publish).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('s-1'), expect.any(Error));
     consoleErrorSpy.mockRestore();
   });
 
-  it('should continue with remaining stations when alerting fails for one (bulkhead)', async () => {
+  it('should continue with remaining stations when publish fails for one (bulkhead)', async () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     const stations = [makeStation('s-1', 0, 0), makeStation('s-2', 10, 20)];
     monitoredStationRepository.findAll.mockResolvedValue(stations);
-    owmClient.fetchWeather.mockResolvedValue(weatherData);
-    alertingClient.postMeasurement
-      .mockRejectedValueOnce(new Error('Alerting down'))
+    weatherClient.fetchWeather.mockResolvedValue(weatherData);
+    measurementPublisher.publish
+      .mockRejectedValueOnce(new Error('RabbitMQ down'))
       .mockResolvedValueOnce(undefined);
 
     await service.runIngestionCycle();
 
-    expect(alertingClient.postMeasurement).toHaveBeenCalledTimes(2);
+    expect(measurementPublisher.publish).toHaveBeenCalledTimes(2);
     expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('s-1'), expect.any(Error));
     consoleErrorSpy.mockRestore();
   });
@@ -110,7 +110,7 @@ describe('WeatherIngestionService', () => {
 
     await service.runIngestionCycle();
 
-    expect(owmClient.fetchWeather).not.toHaveBeenCalled();
-    expect(alertingClient.postMeasurement).not.toHaveBeenCalled();
+    expect(weatherClient.fetchWeather).not.toHaveBeenCalled();
+    expect(measurementPublisher.publish).not.toHaveBeenCalled();
   });
 });
