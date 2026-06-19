@@ -1,3 +1,3 @@
 export { IMonitoredStationRepository } from './IMonitoredStationRepository';
-export { IOWMWeatherClient, OWMWeatherData } from './IOWMWeatherClient';
+export { IWeatherClient, WeatherData } from './IWeatherClient';
 export { IAlertingClient, MeasurementPayload } from './IAlertingClient';

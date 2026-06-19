@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IOWMWeatherClient, OWMWeatherData } from '@/infrastructure/ports';
+import { IWeatherClient, WeatherData } from '@/infrastructure/ports';
 import { CircuitBreaker } from '@/infrastructure/fault-tolerance/CircuitBreaker';
 
 const OWMResponseSchema = z.object({
@@ -17,7 +17,7 @@ export class OWMApiError extends Error {
   }
 }
 
-export class OWMHttpClient implements IOWMWeatherClient {
+export class OWMHttpClient implements IWeatherClient {
   private readonly baseUrl: string;
 
   constructor(
@@ -29,7 +29,7 @@ export class OWMHttpClient implements IOWMWeatherClient {
     this.baseUrl = baseUrl ?? 'https://api.openweathermap.org/data/2.5';
   }
 
-  async fetchWeather(latitude: number, longitude: number): Promise<OWMWeatherData> {
+  async fetchWeather(latitude: number, longitude: number): Promise<WeatherData> {
     const url = `${this.baseUrl}/weather?lat=${latitude}&lon=${longitude}&appid=${this.apiKey}&units=metric`;
 
     return this.circuitBreaker.execute(async () => {

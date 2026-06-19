@@ -1,5 +1,5 @@
 import { WeatherIngestionService } from './WeatherIngestionService';
-import { IMonitoredStationRepository, IOWMWeatherClient, IAlertingClient } from '@/infrastructure/ports';
+import { IMonitoredStationRepository, IWeatherClient, IAlertingClient } from '@/infrastructure/ports';
 import { MonitoredStation } from '@/domain';
 
 const makeStation = (id: string, lat: number, lon: number): MonitoredStation =>
@@ -7,7 +7,7 @@ const makeStation = (id: string, lat: number, lon: number): MonitoredStation =>
 
 describe('WeatherIngestionService', () => {
   let monitoredStationRepository: jest.Mocked<IMonitoredStationRepository>;
-  let owmClient: jest.Mocked<IOWMWeatherClient>;
+  let owmClient: jest.Mocked<IWeatherClient>;
   let alertingClient: jest.Mocked<IAlertingClient>;
   let service: WeatherIngestionService;
 
