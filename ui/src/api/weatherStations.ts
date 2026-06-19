@@ -6,6 +6,7 @@ export interface CreateStationPayload {
   location: { latitude: number; longitude: number };
   model: string;
   ownerId: string;
+  receivesExternalData?: boolean;
 }
 
 export interface UpdateStationPayload {
@@ -13,6 +14,7 @@ export interface UpdateStationPayload {
   location?: { latitude: number; longitude: number };
   model?: string;
   status?: 'Active' | 'Inactive';
+  receivesExternalData?: boolean;
 }
 
 export const weatherStationsApi = {

@@ -30,7 +30,7 @@ export default function WeatherStationsPage() {
   const displayedStations = isSearching ? (searchResult ? [searchResult] : []) : (stations ?? []);
 
   const handleSubmit = (data: StationFormData) => {
-    const { latitude, longitude, name, model, status, ownerId } = data;
+    const { latitude, longitude, name, model, status, ownerId, receivesExternalData } = data;
 
     if (editTarget) {
       updateStation.mutate(
@@ -41,6 +41,7 @@ export default function WeatherStationsPage() {
             model,
             status,
             location: { latitude, longitude },
+            receivesExternalData,
           },
         },
         {
@@ -60,7 +61,7 @@ export default function WeatherStationsPage() {
       );
     } else {
       createStation.mutate(
-        { name, model, ownerId: ownerId ?? '', location: { latitude, longitude } },
+        { name, model, ownerId: ownerId ?? '', location: { latitude, longitude }, receivesExternalData },
         {
           onSuccess: () => {
             setNotification({ message: 'Station created successfully', severity: 'success' });

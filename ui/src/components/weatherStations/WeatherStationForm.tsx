@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import {
   Button,
+  Checkbox,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   MenuItem,
   Stack,
   TextField,
@@ -44,6 +46,7 @@ export default function WeatherStationForm({ open, station, onClose, onSubmit, l
       latitude: undefined,
       longitude: undefined,
       status: 'Active',
+      receivesExternalData: false,
     },
   });
 
@@ -57,8 +60,9 @@ export default function WeatherStationForm({ open, station, onClose, onSubmit, l
             latitude: station.location.latitude,
             longitude: station.location.longitude,
             ownerId: station.ownerId,
+            receivesExternalData: station.receivesExternalData ?? false,
           }
-        : { name: '', model: '', ownerId: '', latitude: undefined, longitude: undefined, status: 'Active' }
+        : { name: '', model: '', ownerId: '', latitude: undefined, longitude: undefined, status: 'Active', receivesExternalData: false }
     );
   }, [station, open, reset, isEdit]);
 
@@ -141,6 +145,16 @@ export default function WeatherStationForm({ open, station, onClose, onSubmit, l
               <MenuItem value="Active">Active</MenuItem>
               <MenuItem value="Inactive">Inactive</MenuItem>
             </TextField>
+            <Controller
+              name="receivesExternalData"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={<Checkbox checked={!!field.value} onChange={field.onChange} />}
+                  label="Receives external data (OWM ingestion)"
+                />
+              )}
+            />
           </Stack>
         </DialogContent>
         <DialogActions>
