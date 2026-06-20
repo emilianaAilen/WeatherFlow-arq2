@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { IOWMWeatherClient, OWMWeatherData } from '@/infrastructure/ports';
+import { IWeatherClient, WeatherData } from '@/infrastructure/ports';
+import { CircuitBreaker } from '@/infrastructure/fault-tolerance/CircuitBreaker';
 
 const OWMResponseSchema = z.object({
   main: z.object({
@@ -16,28 +17,43 @@ export class OWMApiError extends Error {
   }
 }
 
-export class OWMHttpClient implements IOWMWeatherClient {
+export class OWMHttpClient implements IWeatherClient {
+  private readonly baseUrl: string;
+
   constructor(
     private readonly apiKey: string,
-    private readonly baseUrl: string = 'https://api.openweathermap.org/data/2.5',
-  ) {}
+    private readonly circuitBreaker: CircuitBreaker,
+    private readonly timeoutMs: number = 5000,
+    baseUrl?: string,
+  ) {
+    this.baseUrl = baseUrl ?? 'https://api.openweathermap.org/data/2.5';
+  }
 
-  async fetchWeather(latitude: number, longitude: number): Promise<OWMWeatherData> {
+  async fetchWeather(latitude: number, longitude: number): Promise<WeatherData> {
     const url = `${this.baseUrl}/weather?lat=${latitude}&lon=${longitude}&appid=${this.apiKey}&units=metric`;
 
-    const response = await fetch(url);
+    return this.circuitBreaker.execute(async () => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
-    if (!response.ok) {
-      throw new OWMApiError(`OWM API responded with status ${response.status}`);
-    }
+      try {
+        const response = await fetch(url, { signal: controller.signal });
 
-    const json = await response.json();
-    const parsed = OWMResponseSchema.parse(json);
+        if (!response.ok) {
+          throw new OWMApiError(`OWM API responded with status ${response.status}`);
+        }
 
-    return {
-      temperature: parsed.main.temp,
-      humidity: parsed.main.humidity,
-      pressure: parsed.main.pressure,
-    };
+        const json = await response.json();
+        const parsed = OWMResponseSchema.parse(json);
+
+        return {
+          temperature: parsed.main.temp,
+          humidity: parsed.main.humidity,
+          pressure: parsed.main.pressure,
+        };
+      } finally {
+        clearTimeout(timer);
+      }
+    });
   }
 }

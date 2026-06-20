@@ -1,9 +1,9 @@
-import { IMonitoredStationRepository, IOWMWeatherClient, IAlertingClient } from '@/infrastructure/ports';
+import { IMonitoredStationRepository, IWeatherClient, IAlertingClient } from '@/infrastructure/ports';
 
 export class WeatherIngestionService {
   constructor(
     private readonly monitoredStationRepository: IMonitoredStationRepository,
-    private readonly owmClient: IOWMWeatherClient,
+    private readonly owmClient: IWeatherClient,
     private readonly alertingClient: IAlertingClient,
   ) {}
 

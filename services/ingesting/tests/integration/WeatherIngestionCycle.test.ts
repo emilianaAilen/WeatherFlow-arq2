@@ -59,9 +59,11 @@ describe('WeatherIngestionCycle Integration', () => {
     const { OWMHttpClient } = await import('../../infrastructure/adapters/OWMHttpClient');
     const { AlertingHttpClient } = await import('../../infrastructure/adapters/AlertingHttpClient');
     const { WeatherIngestionService } = await import('../../application/WeatherIngestionService');
+    const { CircuitBreaker } = await import('../../infrastructure/fault-tolerance/CircuitBreaker');
 
     MonitoredStationRepository = Repo;
-    const owmClient = new OWMHttpClient('test-key', `http://localhost:${owmPort}`);
+    const owmCb = new CircuitBreaker({ failureThreshold: 3, successThreshold: 1, openDurationMs: 30_000 });
+    const owmClient = new OWMHttpClient('test-key', owmCb, 5000, `http://localhost:${owmPort}`);
     const alertingClient = new AlertingHttpClient(`http://localhost:${alertingPort}`);
     service = new WeatherIngestionService(new Repo(), owmClient, alertingClient);
   }, 60000);
