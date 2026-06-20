@@ -75,7 +75,6 @@ services:
       - OWM_API_KEY=test-key
       - OWM_BASE_URL=http://owm-mock:9090/data/2.5
       - OWM_CRON=* * * * * *
-      - ALERTING_BASE_URL=http://alerting:3000
     command: npm run dev
     depends_on:
       mongodb:

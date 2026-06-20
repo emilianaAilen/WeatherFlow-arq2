@@ -1,10 +1,10 @@
-import { IMonitoredStationRepository, IWeatherClient, IAlertingClient } from '@/infrastructure/ports';
+import { IMonitoredStationRepository, IWeatherClient, IMeasurementPublisher } from '@/infrastructure/ports';
 
 export class WeatherIngestionService {
   constructor(
     private readonly monitoredStationRepository: IMonitoredStationRepository,
-    private readonly owmClient: IWeatherClient,
-    private readonly alertingClient: IAlertingClient,
+    private readonly weatherClient: IWeatherClient,
+    private readonly measurementPublisher: IMeasurementPublisher,
   ) {}
 
   async runIngestionCycle(): Promise<void> {
@@ -12,8 +12,8 @@ export class WeatherIngestionService {
 
     for (const station of stations) {
       try {
-        const weather = await this.owmClient.fetchWeather(station.latitude, station.longitude);
-        await this.alertingClient.postMeasurement({
+        const weather = await this.weatherClient.fetchWeather(station.latitude, station.longitude);
+        await this.measurementPublisher.publish({
           temperature: weather.temperature,
           humidity: weather.humidity,
           atmosphericPressure: weather.pressure,

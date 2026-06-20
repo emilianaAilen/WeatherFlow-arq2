@@ -86,7 +86,6 @@ services:
       OWM_CRON: ${OWM_CRON:-*/5 * * * *}
       OWM_BASE_URL: ${OWM_BASE_URL:-https://api.openweathermap.org/data/2.5}
       OWM_TIMEOUT_MS: ${OWM_TIMEOUT_MS:-5000}
-      ALERTING_BASE_URL: http://alerting:3000
     depends_on:
       mongodb:
         condition: service_started

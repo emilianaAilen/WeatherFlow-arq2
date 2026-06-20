@@ -4,6 +4,7 @@ import {
   RabbitMQNotificationQueue,
   StationReadModelRepository,
   RabbitMQStationEventConsumer,
+  RabbitMQMeasurementConsumer,
 } from './adapters';
 import { ClimateMeasurementService } from '@/application/ClimateMeasurementService';
 
@@ -17,10 +18,17 @@ export const notificationQueue = new RabbitMQNotificationQueue(
   process.env.RABBITMQ_URL ?? 'amqp://localhost',
 );
 
+const climateMeasurementService = new ClimateMeasurementService(
+  climateMeasurementRepository,
+  stationReadModelRepository,
+  notificationQueue,
+);
+
+export const measurementConsumer = new RabbitMQMeasurementConsumer(
+  process.env.RABBITMQ_URL ?? 'amqp://localhost',
+  climateMeasurementService,
+);
+
 export const measurementController = new ClimateMeasurementController(
-  new ClimateMeasurementService(
-    climateMeasurementRepository,
-    stationReadModelRepository,
-    notificationQueue,
-  ),
+  climateMeasurementService,
 );
