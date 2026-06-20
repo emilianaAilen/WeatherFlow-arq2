@@ -7,6 +7,7 @@ export const stationFormSchema = z.object({
   latitude: z.coerce.number().min(-90, 'Latitude must be ≥ -90').max(90, 'Latitude must be ≤ 90'),
   longitude: z.coerce.number().min(-180, 'Longitude must be ≥ -180').max(180, 'Longitude must be ≤ 180'),
   status: z.enum(['Active', 'Inactive']).optional(),
+  receivesExternalData: z.boolean().optional().default(false),
 });
 
 export const createStationSchema = stationFormSchema;

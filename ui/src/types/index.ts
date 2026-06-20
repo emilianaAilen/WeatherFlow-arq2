@@ -18,6 +18,7 @@ export interface WeatherStation {
   sensorModel: string;
   status: 'Active' | 'Inactive';
   ownerId: string;
+  receivesExternalData?: boolean;
 }
 
 export type AlertType =
