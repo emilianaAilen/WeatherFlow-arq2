@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: weatherflow-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - weatherflow-network
+    restart: unless-stopped
+
+  alerting:
+    build:
+      context: ./services/alerting
+    container_name: weatherflow-alerting
+    ports:
+      - "${PORT_ALERTING:-4001}:3000"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI_ALERTING}
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - weatherflow-network
+    restart: unless-stopped
+
+  station_management:
+    build:
+      context: ./services/station_management
+    container_name: weatherflow-stations
+    ports:
+      - "${PORT_STATIONS:-4000}:3000"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI_STATIONS}
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - weatherflow-network
+    restart: unless-stopped
+
+  ingesting:
+    build:
+      context: ./services/ingesting
+    container_name: weatherflow-ingesting
+    ports:
+      - "${PORT_INGESTING:-4002}:3000"
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      MONGODB_URI: ${MONGODB_URI_INGESTING}
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      OWM_API_KEY: ${OWM_API_KEY}
+      OWM_CRON: ${OWM_CRON:-*/15 * * * *}
+      OWM_BASE_URL: ${OWM_BASE_URL:-https://api.openweathermap.org/data/2.5}
+      OWM_TIMEOUT_MS: ${OWM_TIMEOUT_MS:-5000}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - weatherflow-network
+    restart: unless-stopped
+
+networks:
+  weatherflow-network:
+    driver: bridge
