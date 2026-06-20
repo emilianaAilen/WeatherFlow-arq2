@@ -1,3 +1,5 @@
+import { logger } from '@/infrastructure/logger';
+
 export class CircuitOpenError extends Error {
   constructor() {
     super('Circuit breaker is OPEN');
@@ -15,6 +17,7 @@ export interface CircuitBreakerOptions {
   failureThreshold: number;
   successThreshold: number;
   openDurationMs: number;
+  name?: string;
 }
 
 export class CircuitBreaker {
@@ -22,8 +25,11 @@ export class CircuitBreaker {
   private failureCount = 0;
   private successCount = 0;
   private openedAt: number | null = null;
+  private readonly name: string;
 
-  constructor(private readonly options: CircuitBreakerOptions) {}
+  constructor(private readonly options: CircuitBreakerOptions) {
+    this.name = options.name ?? 'unknown';
+  }
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
     if (this.state === CircuitState.OPEN) {
@@ -31,7 +37,9 @@ export class CircuitBreaker {
         this.state = CircuitState.HALF_OPEN;
         this.failureCount = 0;
         this.successCount = 0;
+        logger.info({ service: this.name }, 'Circuit breaker probing (HALF_OPEN)');
       } else {
+        logger.warn({ service: this.name }, 'Circuit breaker is OPEN, request skipped');
         throw new CircuitOpenError();
       }
     }
@@ -58,6 +66,7 @@ export class CircuitBreaker {
         this.failureCount = 0;
         this.successCount = 0;
         this.openedAt = null;
+        logger.info({ service: this.name }, 'Circuit breaker recovered (CLOSED)');
       }
     } else {
       this.failureCount = 0;
@@ -69,12 +78,14 @@ export class CircuitBreaker {
       this.state = CircuitState.OPEN;
       this.openedAt = Date.now();
       this.failureCount = 0;
+      logger.warn({ service: this.name }, 'Circuit breaker re-opened during probe');
       return;
     }
     this.failureCount++;
     if (this.failureCount >= this.options.failureThreshold) {
       this.state = CircuitState.OPEN;
       this.openedAt = Date.now();
+      logger.warn({ service: this.name, failureCount: this.failureCount }, 'Circuit breaker opened');
     }
   }
 }

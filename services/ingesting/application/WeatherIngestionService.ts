@@ -1,4 +1,6 @@
 import { IMonitoredStationRepository, IWeatherClient, IMeasurementPublisher } from '@/infrastructure/ports';
+import { CircuitOpenError } from '@/infrastructure/fault-tolerance/CircuitBreaker';
+import { logger } from '@/infrastructure/logger';
 
 export class WeatherIngestionService {
   constructor(
@@ -9,8 +11,14 @@ export class WeatherIngestionService {
 
   async runIngestionCycle(): Promise<void> {
     const stations = await this.monitoredStationRepository.findAll();
+    const cycleStart = Date.now();
+    let succeeded = 0;
+    let failed = 0;
+
+    logger.info({ stationCount: stations.length }, 'Ingestion cycle started');
 
     for (const station of stations) {
+      const stationStart = Date.now();
       try {
         const weather = await this.weatherClient.fetchWeather(station.latitude, station.longitude);
         await this.measurementPublisher.publish({
@@ -19,10 +27,26 @@ export class WeatherIngestionService {
           atmosphericPressure: weather.pressure,
           stationId: station.alertingStationId,
         });
-        console.info(`Ingested weather data for station ${station.id}`);
+        succeeded++;
+        logger.info(
+          { stationId: station.id, lat: station.latitude, lon: station.longitude,
+            temperature: weather.temperature, humidity: weather.humidity, pressure: weather.pressure,
+            durationMs: Date.now() - stationStart },
+          'Station ingested',
+        );
       } catch (error) {
-        console.error(`Failed to ingest weather data for station ${station.id}`, error);
+        failed++;
+        if (error instanceof CircuitOpenError) {
+          logger.warn({ stationId: station.id }, 'Station skipped — OWM circuit breaker is OPEN');
+        } else {
+          logger.error({ stationId: station.id, error: (error as Error).message }, 'Failed to ingest station');
+        }
       }
     }
+
+    logger.info(
+      { succeeded, failed, total: stations.length, durationMs: Date.now() - cycleStart },
+      'Ingestion cycle completed',
+    );
   }
 }

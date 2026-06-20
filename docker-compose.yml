@@ -80,6 +80,7 @@ services:
       - "${PORT_INGESTING:-4002}:3000"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-secret}@mongodb:27017/ingesting?authSource=admin
       RABBITMQ_URL: amqp://rabbitmq:5672
       OWM_API_KEY: ${OWM_API_KEY}

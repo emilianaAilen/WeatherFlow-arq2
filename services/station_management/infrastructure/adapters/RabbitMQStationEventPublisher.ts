@@ -1,6 +1,7 @@
 import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { WeatherStation } from '@/domain';
 import { IStationEventPublisher } from '@/infrastructure/ports';
+import { logger } from '@/infrastructure/logger';
 
 const EXCHANGE = 'station-events';
 
@@ -17,12 +18,12 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
       if (!this.model) {
         this.model = await amqplib.connect(this.url);
         this.model.on('error', (err) => {
-          console.error('RabbitMQ connection error', err);
+          logger.error({ err }, 'RabbitMQ connection error');
           this.model = null;
           this.channel = null;
         });
         this.model.on('close', () => {
-          console.info('RabbitMQ connection closed');
+          logger.info('RabbitMQ connection closed');
           this.model = null;
           this.channel = null;
         });
@@ -30,11 +31,11 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
 
       this.channel = await this.model.createChannel();
       this.channel.on('error', (err) => {
-        console.error('RabbitMQ channel error', err);
+        logger.error({ err }, 'RabbitMQ channel error');
         this.channel = null;
       });
       this.channel.on('close', () => {
-        console.info('RabbitMQ channel closed');
+        logger.info('RabbitMQ channel closed');
         this.channel = null;
       });
 

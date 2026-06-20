@@ -2,6 +2,7 @@ import request from 'supertest';
 import { MongoDBContainer } from '@testcontainers/mongodb';
 import { RabbitMQContainer } from '@testcontainers/rabbitmq';
 import amqplib from 'amqplib';
+import { logger } from '../../infrastructure/logger';
 
 const STATION_ID = '550e8400-e29b-41d4-a716-446655440001';
 const EXCHANGE = 'station-events';
@@ -161,7 +162,7 @@ describe('StationIngestion Integration', () => {
 
   it('should send malformed event to DLQ and not register the station', async () => {
     const badId = '550e8400-e29b-41d4-a716-446655440099';
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => false);
 
     // Missing latitude/longitude — Zod discriminated union will reject this
     publishEvent({
@@ -173,11 +174,11 @@ describe('StationIngestion Integration', () => {
 
     await waitForProcessing();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.any(String) }),
       'Error processing station event, moving to DLQ',
-      expect.any(Error),
     );
-    consoleErrorSpy.mockRestore();
+    loggerErrorSpy.mockRestore();
 
     const res = await request(app.getExpressApp()).get(`/monitored-stations/${badId}`);
     expect(res.status).toBe(404);

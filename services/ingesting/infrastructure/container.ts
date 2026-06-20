@@ -6,12 +6,13 @@ import {
 } from './adapters';
 import { IngestionScheduler } from './adapters/IngestionScheduler';
 import { CircuitBreaker } from './fault-tolerance/CircuitBreaker';
+import { logger } from './logger';
 import { MonitoredStationController } from '@/user-interface/adapters/controllers';
 import { MonitoredStationService } from '@/application/MonitoredStationService';
 import { WeatherIngestionService } from '@/application/WeatherIngestionService';
 
 if (!process.env.OWM_API_KEY && process.env.NODE_ENV !== 'test') {
-  console.warn('OWM_API_KEY is not set — weather ingestion will not fetch real data');
+  logger.warn('OWM_API_KEY is not set — weather ingestion will not fetch real data');
 }
 
 const monitoredStationRepository = new MonitoredStationRepository();

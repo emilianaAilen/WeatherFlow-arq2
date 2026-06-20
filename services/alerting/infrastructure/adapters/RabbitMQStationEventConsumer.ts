@@ -1,6 +1,7 @@
 import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { z } from 'zod';
 import { IStationReadModelRepository } from '@/infrastructure/ports/IStationReadModelRepository';
+import { logger } from '@/infrastructure/logger';
 
 const EXCHANGE = 'station-events';
 const QUEUE = 'alerting.station-events';
@@ -31,36 +32,33 @@ export class RabbitMQStationEventConsumer {
       this.model = await amqplib.connect(this.url);
 
       this.model.on('error', (err) => {
-        console.error('RabbitMQ consumer connection error', err);
+        logger.error({ err }, 'RabbitMQ station event consumer connection error');
         this.reconnect();
       });
 
       this.model.on('close', () => {
-        console.info('RabbitMQ consumer connection closed');
+        logger.info('RabbitMQ station event consumer connection closed');
         this.reconnect();
       });
 
       this.channel = await this.model.createChannel();
 
       this.channel.on('error', (err) => {
-        console.error('RabbitMQ consumer channel error', err);
+        logger.error({ err }, 'RabbitMQ station event consumer channel error');
         this.reconnect();
       });
 
       this.channel.on('close', () => {
-        console.info('RabbitMQ consumer channel closed');
+        logger.info('RabbitMQ station event consumer channel closed');
         this.reconnect();
       });
 
-      // Assert source fanout exchange
       await this.channel.assertExchange(EXCHANGE, 'fanout', { durable: true });
 
-      // Assert DLX and DLQ
       await this.channel.assertExchange(DLX_EXCHANGE, 'fanout', { durable: true });
       await this.channel.assertQueue(DLQ, { durable: true });
       await this.channel.bindQueue(DLQ, DLX_EXCHANGE, '');
 
-      // Assert dedicated queue for this consumer and bind to source exchange
       await this.channel.assertQueue(QUEUE, {
         durable: true,
         deadLetterExchange: DLX_EXCHANGE,
@@ -81,27 +79,29 @@ export class RabbitMQStationEventConsumer {
                 id: payload.id,
                 name: payload.name,
               });
+              logger.info({ stationId: payload.id, name: payload.name }, 'Station added to read model');
               break;
             case 'StationUpdated':
               if (!payload.name) throw new Error('Name required for StationUpdated');
               await this.stationReadModelRepository.update(payload.id, payload.name);
+              logger.info({ stationId: payload.id, name: payload.name }, 'Station updated in read model');
               break;
             case 'StationDeleted':
               await this.stationReadModelRepository.remove(payload.id);
+              logger.info({ stationId: payload.id }, 'Station removed from read model');
               break;
           }
 
           this.channel?.ack(msg);
         } catch (error) {
-          console.error('Error processing station event, moving to DLQ', error);
-          // nack with requeue=false sends it to the configured deadLetterExchange
+          logger.error({ error: (error as Error).message }, 'Error processing station event, moving to DLQ');
           this.channel?.nack(msg, false, false);
         }
       });
 
-      console.info('RabbitMQ StationEventConsumer started successfully');
+      logger.info('RabbitMQ StationEventConsumer (alerting) started successfully');
     } catch (error) {
-      console.error('Failed to start RabbitMQ consumer:', error);
+      logger.error({ error: (error as Error).message }, 'Failed to start station event consumer');
       this.reconnect();
     } finally {
       this.reconnecting = false;
@@ -112,14 +112,14 @@ export class RabbitMQStationEventConsumer {
     if (this.reconnecting) return;
     this.model = null;
     this.channel = null;
-    console.info('Attempting to reconnect RabbitMQ consumer in 5 seconds...');
+    logger.info('Attempting to reconnect station event consumer in 5 seconds...');
     setTimeout(() => {
-      this.start().catch(console.error);
+      this.start().catch((err) => logger.error({ err }, 'Reconnect failed'));
     }, 5000);
   }
 
   async stop(): Promise<void> {
-    this.reconnecting = true; // Prevent automatic reconnection on intentional stop
+    this.reconnecting = true;
     await this.channel?.close();
     await this.model?.close();
   }

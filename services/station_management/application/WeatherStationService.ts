@@ -12,6 +12,7 @@ import { IStationEventPublisher } from '@/infrastructure/ports/IStationEventPubl
 import { WeatherStationPort } from '@/user-interface/ports/WeatherStationPort';
 import { CreateWeatherStationRequest } from '@/user-interface/dtos/CreateWeatherStationDTO';
 import { UpdateWeatherStationRequest } from '@/user-interface/dtos/UpdateWeatherStationDTO';
+import { logger } from '@/infrastructure/logger';
 
 export class WeatherStationService implements WeatherStationPort {
   constructor(
@@ -55,6 +56,7 @@ export class WeatherStationService implements WeatherStationPort {
     );
     await this.weatherStationRepository.update(id, updated);
     await this.stationEventPublisher.publishStationUpdated(updated);
+    logger.info({ stationId: id, name: updated.name, receivesExternalData: updated.receivesExternalData }, 'Weather station updated');
     return updated;
   }
 
@@ -66,6 +68,7 @@ export class WeatherStationService implements WeatherStationPort {
 
     await this.weatherStationRepository.remove(id);
     await this.stationEventPublisher.publishStationDeleted(id);
+    logger.info({ stationId: id }, 'Weather station deleted');
   }
 
   async searchByName(name: string): Promise<WeatherStation | null> {
@@ -93,6 +96,7 @@ export class WeatherStationService implements WeatherStationPort {
     );
     await this.weatherStationRepository.save(station);
     await this.stationEventPublisher.publishStationCreated(station);
+    logger.info({ stationId: id, name: station.name, ownerId: station.ownerId, receivesExternalData: station.receivesExternalData }, 'Weather station created');
     return station;
   }
 }

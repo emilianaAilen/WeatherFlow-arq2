@@ -1,5 +1,6 @@
 import { RabbitMQStationEventConsumer } from './RabbitMQStationEventConsumer';
 import { IStationReadModelRepository } from '@/infrastructure/ports/IStationReadModelRepository';
+import { logger } from '@/infrastructure/logger';
 import amqplib from 'amqplib';
 
 jest.mock('amqplib');
@@ -113,7 +114,7 @@ describe('RabbitMQStationEventConsumer', () => {
   });
 
   it('should reject unknown event type and send to DLQ', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => false);
     await consumer.start();
 
     const consumeCallback = mockChannel.consume.mock.calls[0][1];
@@ -123,12 +124,12 @@ describe('RabbitMQStationEventConsumer', () => {
 
     await consumeCallback(message);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.any(String) }),
       'Error processing station event, moving to DLQ',
-      expect.any(Error),
     );
     expect(mockChannel.nack).toHaveBeenCalledWith(message, false, false);
-    consoleErrorSpy.mockRestore();
+    loggerErrorSpy.mockRestore();
   });
 
   it('should handle missing message gracefully', async () => {
@@ -140,7 +141,7 @@ describe('RabbitMQStationEventConsumer', () => {
   });
 
   it('should catch error, log it, and nack message', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => false);
     await consumer.start();
 
     const consumeCallback = mockChannel.consume.mock.calls[0][1];
@@ -152,12 +153,12 @@ describe('RabbitMQStationEventConsumer', () => {
 
     await consumeCallback(message);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.any(String) }),
       'Error processing station event, moving to DLQ',
-      expect.any(Error),
     );
     expect(mockChannel.nack).toHaveBeenCalledWith(message, false, false);
-    consoleErrorSpy.mockRestore();
+    loggerErrorSpy.mockRestore();
   });
 
   it('should close channel and connection on stop', async () => {

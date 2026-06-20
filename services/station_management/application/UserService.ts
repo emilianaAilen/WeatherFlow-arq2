@@ -5,6 +5,7 @@ import { IWeatherStationRepository } from '@/infrastructure/ports/IWeatherStatio
 import { UserPort } from '@/user-interface/ports/UserPort';
 import { CreateUserRequest } from '@/user-interface/dtos/CreateUserDTO';
 import { UpdateUserRequest } from '@/user-interface/dtos/UpdateUserDTO';
+import { logger } from '@/infrastructure/logger';
 
 export class UserService implements UserPort {
   constructor(
@@ -39,6 +40,7 @@ export class UserService implements UserPort {
       existing.subscriptions,
     );
     await this.userRepository.update(id, updated);
+    logger.info({ userId: id }, 'User updated');
     return updated;
   }
 
@@ -52,6 +54,7 @@ export class UserService implements UserPort {
       throw new ConflictError('User owns one or more weather stations and cannot be deleted');
     }
     await this.userRepository.remove(id);
+    logger.info({ userId: id }, 'User deleted');
   }
 
   async createUser(dto: CreateUserRequest): Promise<User> {
@@ -62,6 +65,7 @@ export class UserService implements UserPort {
     const id = crypto.randomUUID();
     const user = User.create(id, dto.name, dto.surname, dto.email);
     await this.userRepository.save(user);
+    logger.info({ userId: id, email: dto.email }, 'User created');
     return user;
   }
 
@@ -76,5 +80,6 @@ export class UserService implements UserPort {
     }
     const updatedUser = user.subscribe(stationId);
     await this.userRepository.update(id, updatedUser);
+    logger.info({ userId: id, stationId }, 'User subscribed to station');
   }
 }

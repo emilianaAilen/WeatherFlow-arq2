@@ -7,6 +7,8 @@ import { userRoutes, weatherStationRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
 import { SubscriptionError } from '@/domain/errors/SubscriptionError';
 import { NotFoundError, ConflictError } from '@/domain';
+import { logger } from '@/infrastructure/logger';
+import pinoHttp from 'pino-http';
 
 class App {
   private app: Express;
@@ -24,6 +26,7 @@ class App {
   }
 
   private setupMiddlewares(): void {
+    this.app.use(pinoHttp({ logger }));
     this.app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -60,12 +63,11 @@ class App {
     try {
       await MongoDBConnection.connect();
       this.app.listen(this.port, () => {
-        console.info(`WeatherFlow - Station Management API is running on port ${this.port}`);
-        console.info(`Swagger UI:   http://localhost:${this.port}/docs`);
-        console.info(`OpenAPI JSON: http://localhost:${this.port}/docs.json`);
+        logger.info({ port: this.port }, 'WeatherFlow - Station Management API is running');
+        logger.info({ url: `http://localhost:${this.port}/docs` }, 'Swagger UI');
       });
     } catch (error) {
-      console.error('Failed to start application:', error);
+      logger.error({ error }, 'Failed to start application');
       process.exit(1);
     }
   }

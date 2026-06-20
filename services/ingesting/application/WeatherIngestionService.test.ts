@@ -1,6 +1,7 @@
 import { WeatherIngestionService } from './WeatherIngestionService';
 import { IMonitoredStationRepository, IWeatherClient, IMeasurementPublisher } from '@/infrastructure/ports';
 import { MonitoredStation } from '@/domain';
+import { logger } from '@/infrastructure/logger';
 
 const makeStation = (id: string, lat: number, lon: number): MonitoredStation =>
   new MonitoredStation(id, `Station ${id}`, id, lat, lon);
@@ -73,7 +74,7 @@ describe('WeatherIngestionService', () => {
   });
 
   it('should continue with remaining stations when OWM fails for one (bulkhead)', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => false);
     const stations = [makeStation('s-1', 0, 0), makeStation('s-2', 10, 20)];
     monitoredStationRepository.findAll.mockResolvedValue(stations);
     weatherClient.fetchWeather
@@ -85,12 +86,12 @@ describe('WeatherIngestionService', () => {
 
     expect(weatherClient.fetchWeather).toHaveBeenCalledTimes(2);
     expect(measurementPublisher.publish).toHaveBeenCalledTimes(1);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('s-1'), expect.any(Error));
-    consoleErrorSpy.mockRestore();
+    expect(loggerErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ stationId: 's-1' }), expect.any(String));
+    loggerErrorSpy.mockRestore();
   });
 
   it('should continue with remaining stations when publish fails for one (bulkhead)', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => false);
     const stations = [makeStation('s-1', 0, 0), makeStation('s-2', 10, 20)];
     monitoredStationRepository.findAll.mockResolvedValue(stations);
     weatherClient.fetchWeather.mockResolvedValue(weatherData);
@@ -101,8 +102,8 @@ describe('WeatherIngestionService', () => {
     await service.runIngestionCycle();
 
     expect(measurementPublisher.publish).toHaveBeenCalledTimes(2);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('s-1'), expect.any(Error));
-    consoleErrorSpy.mockRestore();
+    expect(loggerErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ stationId: 's-1' }), expect.any(String));
+    loggerErrorSpy.mockRestore();
   });
 
   it('should do nothing when there are no monitored stations', async () => {
