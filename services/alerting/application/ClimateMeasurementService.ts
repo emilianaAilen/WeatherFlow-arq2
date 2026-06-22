@@ -7,7 +7,7 @@ import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasuremen
 import { CreateMeasurementRequest } from '@/user-interface/dtos/CreateMeasurementDTO';
 import { UpdateMeasurementRequest } from '@/user-interface/dtos/UpdateMeasurementDTO';
 import { MeasurementFilters } from '@/user-interface/dtos/MeasurementFiltersDTO';
-import { DailyAverageResult, HourlyTemperaturePoint, RepositoryMeasurementFilters } from '@/infrastructure/types';
+import { DailyAverageResult, DailyTemperaturePoint, HourlyTemperaturePoint, RepositoryMeasurementFilters, WeeklyAverageResult } from '@/infrastructure/types';
 import { logger } from '@/infrastructure/logger';
 
 export class ClimateMeasurementService implements ClimateMeasurementPort {
@@ -74,6 +74,32 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
     });
 
     const values = hourlyRaw.map((p) => p.averageTemperature);
+    const averageTemperature = values.reduce((sum, v) => sum + v, 0) / values.length;
+
+    return { stationId, averageTemperature, from, to, data };
+  }
+
+  async getWeeklyTemperatureAverageByStationId(stationId: string): Promise<WeeklyAverageResult | null> {
+    const to = new Date();
+    const from = new Date(to.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const dailyRaw = await this.climateMeasurementRepository.getWeeklyAverageTemperatureByStationId(stationId, from);
+    if (dailyRaw.length === 0) return null;
+
+    const dataMap = new Map(dailyRaw.map((p) => [p.dayStart.getTime(), p.averageTemperature]));
+
+    const firstSlot = new Date(from);
+    firstSlot.setUTCHours(0, 0, 0, 0);
+
+    const data: DailyTemperaturePoint[] = Array.from({ length: 7 }, (_, i) => {
+      const slotTime = new Date(firstSlot.getTime() + i * 86400000);
+      return {
+        date: slotTime.toISOString(),
+        temperature: dataMap.get(slotTime.getTime()) ?? null,
+      };
+    });
+
+    const values = dailyRaw.map((p) => p.averageTemperature);
     const averageTemperature = values.reduce((sum, v) => sum + v, 0) / values.length;
 
     return { stationId, averageTemperature, from, to, data };

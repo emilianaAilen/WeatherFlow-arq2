@@ -3,7 +3,7 @@ import cors from 'cors';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { MongoDBConnection } from '@/infrastructure/database';
-import { measurementRoutes } from '@/user-interface/adapters';
+import { measurementRoutes, stationRoutes } from '@/user-interface/adapters';
 import { generateOpenApiDocument } from '@/user-interface/swagger';
 import { stationEventConsumer, measurementConsumer } from '@/infrastructure/container';
 import { logger } from '@/infrastructure/logger';
@@ -39,6 +39,7 @@ class App {
     this.app.get('/docs.json', (_req: Request, res: Response) => res.json(swaggerDocument));
 
     this.app.use('/measurements', measurementRoutes);
+    this.app.use('/stations', stationRoutes);
 
     this.app.get('/health', (_req: Request, res: Response) => {
       res.json({ status: 'OK', message: 'WeatherFlow - Alerting API is running' });
