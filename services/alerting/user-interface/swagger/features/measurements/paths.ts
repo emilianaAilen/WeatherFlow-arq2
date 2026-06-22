@@ -4,6 +4,7 @@ import {
   CreateMeasurementRequestSchema,
   UpdateMeasurementRequestSchema,
   ClimateMeasurementResponseSchema,
+  DailyAverageResponseSchema,
   MeasurementFiltersQuerySchema,
 } from './schemas';
 import { errorResponse, validationErrorResponse } from '../../shared/responses';
@@ -130,6 +131,41 @@ export function registerMeasurementPaths(registry: OpenAPIRegistry): void {
       404: {
         description: 'Climate measurement not found.',
         content: { 'application/json': { schema: errorResponse('Climate measurement not found') } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/measurements/stations/{stationId}/average/daily',
+    summary: 'Get daily average temperature for a station',
+    description: 'Returns the average temperature recorded for the given station over the last 24 hours.',
+    tags: [measurementTag.name],
+    request: {
+      params: z.object({
+        stationId: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
+      }),
+    },
+    responses: {
+      200: {
+        description: 'Daily averages calculated successfully.',
+        content: { 'application/json': { schema: DailyAverageResponseSchema } },
+      },
+      400: {
+        description: 'The provided stationId is not a valid UUID.',
+        content: {
+          'application/json': {
+            schema: errorResponse('Invalid stationId format — must be a UUID'),
+          },
+        },
+      },
+      404: {
+        description: 'No measurements found for this station in the last 24 hours.',
+        content: {
+          'application/json': {
+            schema: errorResponse('No measurements found for this station in the last 24 hours'),
+          },
+        },
       },
     },
   });

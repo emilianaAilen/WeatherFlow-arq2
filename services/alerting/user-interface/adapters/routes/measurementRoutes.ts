@@ -11,6 +11,10 @@ router.get('/stations/:stationId/current', (req: Request, res: Response, next: N
   measurementController.getCurrentMeasurementByStation(req, res, next),
 );
 
+router.get('/stations/:stationId/average/daily', (req: Request, res: Response, next: NextFunction) =>
+  measurementController.getDailyAverageByStation(req, res, next),
+);
+
 router.post('/', (req: Request, res: Response, next: NextFunction) =>
   measurementController.createMeasurement(req, res, next),
 );

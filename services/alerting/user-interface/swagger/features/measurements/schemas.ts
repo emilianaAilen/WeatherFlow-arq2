@@ -65,6 +65,21 @@ export const MeasurementFiltersQuerySchema = z
   })
   .openapi('MeasurementFiltersQuery');
 
+export const DailyAverageResponseSchema = z
+  .object({
+    stationId: z.string().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
+    averageTemperature: z.number().openapi({ example: 22.4, description: 'Overall average temperature in °C across the last 24 hours' }),
+    from: z.string().openapi({ example: '2024-01-01T00:00:00.000Z', description: 'Start of the 24-hour window (ISO 8601)' }),
+    to: z.string().openapi({ example: '2024-01-02T00:00:00.000Z', description: 'End of the 24-hour window (ISO 8601)' }),
+    data: z.array(
+      z.object({
+        time: z.string().openapi({ example: '2024-01-01T14:00:00.000Z', description: 'Hour slot start (ISO 8601 UTC)' }),
+        temperature: z.number().nullable().openapi({ example: 22.4, description: 'Average temperature in °C for this hour, or null if no data' }),
+      }),
+    ).openapi({ description: '24 hourly data points ready for a Recharts LineChart' }),
+  })
+  .openapi('DailyAverageResponse');
+
 export const ClimateMeasurementResponseSchema = z
   .object({
     id: z.string().openapi({ example: '64b1f2c3e4b0a1b2c3d4e5f6', description: 'Measurement ID' }),

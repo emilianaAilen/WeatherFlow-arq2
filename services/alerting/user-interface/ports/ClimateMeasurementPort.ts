@@ -2,6 +2,7 @@ import { ClimateMeasurement } from '@/domain';
 import { CreateMeasurementRequest } from '@/user-interface/dtos/CreateMeasurementDTO';
 import { UpdateMeasurementRequest } from '@/user-interface/dtos/UpdateMeasurementDTO';
 import { MeasurementFilters } from '@/user-interface/dtos/MeasurementFiltersDTO';
+import { DailyAverageResult } from '@/infrastructure/types';
 
 export interface ClimateMeasurementPort {
   createMeasurement(dto: CreateMeasurementRequest): Promise<ClimateMeasurement>;
@@ -10,4 +11,5 @@ export interface ClimateMeasurementPort {
   deleteMeasurement(id: string): Promise<void>;
   search(filters: MeasurementFilters): Promise<ClimateMeasurement[]>;
   getCurrentMeasurementByStationId(stationId: string): Promise<ClimateMeasurement | null>;
+  getDailyAverageByStationId(stationId: string): Promise<DailyAverageResult | null>;
 }

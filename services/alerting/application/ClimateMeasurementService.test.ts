@@ -19,6 +19,7 @@ describe('ClimateMeasurementService', () => {
       remove: jest.fn(),
       findByStationId: jest.fn(),
       findLatestByStationId: jest.fn(),
+      getHourlyTemperaturesByStationId: jest.fn(),
       filterMeasurementsBy: jest.fn(),
       getAll: jest.fn(),
     };
@@ -166,6 +167,39 @@ describe('ClimateMeasurementService', () => {
       climateMeasurementRepository.findLatestByStationId.mockResolvedValue(null);
 
       const result = await service.getCurrentMeasurementByStationId('station-id');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getDailyAverageByStationId', () => {
+    it('should return 24 hourly slots filling gaps with null', async () => {
+      const now = new Date();
+      const hourStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      hourStart.setMinutes(0, 0, 0);
+
+      climateMeasurementRepository.getHourlyTemperaturesByStationId.mockResolvedValue([
+        { hourStart, averageTemperature: 22.5 },
+      ]);
+
+      const result = await service.getDailyAverageByStationId('station-id');
+
+      expect(climateMeasurementRepository.getHourlyTemperaturesByStationId).toHaveBeenCalledWith(
+        'station-id',
+        expect.any(Date),
+      );
+      expect(result).not.toBeNull();
+      expect(result!.stationId).toBe('station-id');
+      expect(result!.averageTemperature).toBe(22.5);
+      expect(result!.data).toHaveLength(24);
+      expect(result!.data[0].temperature).toBe(22.5);
+      expect(result!.data.slice(1).every((p) => p.temperature === null)).toBe(true);
+    });
+
+    it('should return null when no measurements exist in the last 24 hours', async () => {
+      climateMeasurementRepository.getHourlyTemperaturesByStationId.mockResolvedValue([]);
+
+      const result = await service.getDailyAverageByStationId('station-id');
 
       expect(result).toBeNull();
     });
