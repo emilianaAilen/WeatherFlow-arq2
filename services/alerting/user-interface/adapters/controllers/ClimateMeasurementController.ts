@@ -70,6 +70,24 @@ export class ClimateMeasurementController {
     }
   }
 
+  async getCurrentMeasurementByStation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { stationId } = req.params;
+      if (!UuidSchema.safeParse(stationId).success) {
+        res.status(400).json({ message: 'Invalid stationId format — must be a UUID' });
+        return;
+      }
+      const measurement = await this.climateMeasurementService.getCurrentMeasurementByStationId(stationId);
+      if (!measurement) {
+        res.status(404).json({ message: 'No measurements found for this station' });
+        return;
+      }
+      res.status(200).json(measurement);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async search(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const parsed = MeasurementFiltersQuerySchema.safeParse(req.query);

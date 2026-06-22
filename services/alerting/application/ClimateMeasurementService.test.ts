@@ -18,6 +18,7 @@ describe('ClimateMeasurementService', () => {
       update: jest.fn(),
       remove: jest.fn(),
       findByStationId: jest.fn(),
+      findLatestByStationId: jest.fn(),
       filterMeasurementsBy: jest.fn(),
       getAll: jest.fn(),
     };
@@ -147,6 +148,26 @@ describe('ClimateMeasurementService', () => {
       await expect(service.deleteMeasurement('id')).rejects.toThrow(
         'Climate measurement not found',
       );
+    });
+  });
+
+  describe('getCurrentMeasurementByStationId', () => {
+    it('should return the latest measurement for a station', async () => {
+      const measurement = ClimateMeasurement.create('id', 20, 50, 1013, new Date(), 'station-id');
+      climateMeasurementRepository.findLatestByStationId.mockResolvedValue(measurement);
+
+      const result = await service.getCurrentMeasurementByStationId('station-id');
+
+      expect(climateMeasurementRepository.findLatestByStationId).toHaveBeenCalledWith('station-id');
+      expect(result).toEqual(measurement);
+    });
+
+    it('should return null if station has no measurements', async () => {
+      climateMeasurementRepository.findLatestByStationId.mockResolvedValue(null);
+
+      const result = await service.getCurrentMeasurementByStationId('station-id');
+
+      expect(result).toBeNull();
     });
   });
 

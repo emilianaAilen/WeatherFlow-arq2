@@ -9,4 +9,5 @@ export interface ClimateMeasurementPort {
   getMeasurementById(id: string): Promise<ClimateMeasurement | null>;
   deleteMeasurement(id: string): Promise<void>;
   search(filters: MeasurementFilters): Promise<ClimateMeasurement[]>;
+  getCurrentMeasurementByStationId(stationId: string): Promise<ClimateMeasurement | null>;
 }

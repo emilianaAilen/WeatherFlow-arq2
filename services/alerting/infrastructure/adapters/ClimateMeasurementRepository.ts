@@ -56,6 +56,11 @@ export class ClimateMeasurementRepository implements IClimateMeasurementReposito
     return doc ? this.toDomain(doc) : null;
   }
 
+  async findLatestByStationId(stationId: string): Promise<ClimateMeasurement | null> {
+    const doc = await ClimateMeasurementModel.findOne({ stationId }).sort({ dateTime: -1 }).exec();
+    return doc ? this.toDomain(doc) : null;
+  }
+
   async remove(id: string): Promise<void> {
     await ClimateMeasurementModel.findByIdAndDelete(id).exec();
   }
