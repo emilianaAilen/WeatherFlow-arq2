@@ -7,6 +7,7 @@ export interface IClimateMeasurementRepository {
   update(id: string, measurement: ClimateMeasurement): Promise<void>;
   findByStationId(stationId: string): Promise<ClimateMeasurement | null>;
   findLatestByStationId(stationId: string): Promise<ClimateMeasurement | null>;
+  getHourlyTemperaturesByStationId(stationId: string, since: Date): Promise<{ hourStart: Date; averageTemperature: number }[]>;
   remove(id: string): Promise<void>;
   getAll(): Promise<ClimateMeasurement[]>;
   filterMeasurementsBy(filters: RepositoryMeasurementFilters): Promise<ClimateMeasurement[]>;

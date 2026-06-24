@@ -7,7 +7,7 @@ import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasuremen
 import { CreateMeasurementRequest } from '@/user-interface/dtos/CreateMeasurementDTO';
 import { UpdateMeasurementRequest } from '@/user-interface/dtos/UpdateMeasurementDTO';
 import { MeasurementFilters } from '@/user-interface/dtos/MeasurementFiltersDTO';
-import { RepositoryMeasurementFilters } from '@/infrastructure/types';
+import { DailyAverageResult, HourlyTemperaturePoint, RepositoryMeasurementFilters } from '@/infrastructure/types';
 import { logger } from '@/infrastructure/logger';
 
 export class ClimateMeasurementService implements ClimateMeasurementPort {
@@ -51,6 +51,32 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
 
   async getCurrentMeasurementByStationId(stationId: string): Promise<ClimateMeasurement | null> {
     return this.climateMeasurementRepository.findLatestByStationId(stationId);
+  }
+
+  async getDailyAverageByStationId(stationId: string): Promise<DailyAverageResult | null> {
+    const to = new Date();
+    const from = new Date(to.getTime() - 24 * 60 * 60 * 1000);
+
+    const hourlyRaw = await this.climateMeasurementRepository.getHourlyTemperaturesByStationId(stationId, from);
+    if (hourlyRaw.length === 0) return null;
+
+    const dataMap = new Map(hourlyRaw.map((p) => [p.hourStart.getTime(), p.averageTemperature]));
+
+    const firstSlot = new Date(from);
+    firstSlot.setMinutes(0, 0, 0);
+
+    const data: HourlyTemperaturePoint[] = Array.from({ length: 24 }, (_, i) => {
+      const slotTime = new Date(firstSlot.getTime() + i * 3600000);
+      return {
+        time: slotTime.toISOString(),
+        temperature: dataMap.get(slotTime.getTime()) ?? null,
+      };
+    });
+
+    const values = hourlyRaw.map((p) => p.averageTemperature);
+    const averageTemperature = values.reduce((sum, v) => sum + v, 0) / values.length;
+
+    return { stationId, averageTemperature, from, to, data };
   }
 
   async search(filters: MeasurementFilters): Promise<ClimateMeasurement[]> {

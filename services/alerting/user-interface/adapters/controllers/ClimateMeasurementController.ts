@@ -70,6 +70,24 @@ export class ClimateMeasurementController {
     }
   }
 
+  async getDailyAverageByStation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { stationId } = req.params;
+      if (!UuidSchema.safeParse(stationId).success) {
+        res.status(400).json({ message: 'Invalid stationId format — must be a UUID' });
+        return;
+      }
+      const result = await this.climateMeasurementService.getDailyAverageByStationId(stationId);
+      if (!result) {
+        res.status(404).json({ message: 'No measurements found for this station in the last 24 hours' });
+        return;
+      }
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getCurrentMeasurementByStation(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { stationId } = req.params;
