@@ -78,6 +78,36 @@ describe('ClimateMeasurementRepository', () => {
     });
   });
 
+  describe('getWeeklyAverageTemperatureByStationId', () => {
+    it('should aggregate by day and return mapped results sorted ascending', async () => {
+      const since = new Date('2024-01-01T00:00:00Z');
+      const dayTimestamp = new Date('2024-01-01T00:00:00Z').getTime();
+      const mockExec = jest.fn().mockResolvedValue([{ _id: dayTimestamp, averageTemperature: 21.8 }]);
+      (ClimateMeasurementModel.aggregate as jest.Mock).mockReturnValue({ exec: mockExec });
+
+      const result = await repository.getWeeklyAverageTemperatureByStationId('station-id', since);
+
+      expect(ClimateMeasurementModel.aggregate).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          { $match: { stationId: 'station-id', dateTime: { $gte: since } } },
+          { $sort: { _id: 1 } },
+        ]),
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].averageTemperature).toBe(21.8);
+      expect(result[0].dayStart).toEqual(new Date(dayTimestamp));
+    });
+
+    it('should return an empty array when no documents match', async () => {
+      const mockExec = jest.fn().mockResolvedValue([]);
+      (ClimateMeasurementModel.aggregate as jest.Mock).mockReturnValue({ exec: mockExec });
+
+      const result = await repository.getWeeklyAverageTemperatureByStationId('station-id', new Date());
+
+      expect(result).toEqual([]);
+    });
+  });
+
   describe('filterMeasurementsBy', () => {
     it('should build query with humidity and pressure filters', async () => {
       const mockExec = jest.fn().mockResolvedValue([]);

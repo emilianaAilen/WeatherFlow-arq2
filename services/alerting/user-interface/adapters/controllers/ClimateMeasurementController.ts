@@ -70,6 +70,24 @@ export class ClimateMeasurementController {
     }
   }
 
+  async getWeeklyTemperatureAverageByStation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!UuidSchema.safeParse(id).success) {
+        res.status(400).json({ message: 'Invalid id format — must be a UUID' });
+        return;
+      }
+      const result = await this.climateMeasurementService.getWeeklyTemperatureAverageByStationId(id);
+      if (!result) {
+        res.status(404).json({ message: 'No measurements found for this station in the last 7 days' });
+        return;
+      }
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getDailyAverageByStation(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { stationId } = req.params;

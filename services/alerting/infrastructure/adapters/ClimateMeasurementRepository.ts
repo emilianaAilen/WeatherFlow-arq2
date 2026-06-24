@@ -89,6 +89,25 @@ export class ClimateMeasurementRepository implements IClimateMeasurementReposito
     return docs.map(this.toDomain.bind(this));
   }
 
+  async getWeeklyAverageTemperatureByStationId(
+    stationId: string,
+    since: Date,
+  ): Promise<{ dayStart: Date; averageTemperature: number }[]> {
+    const result = await ClimateMeasurementModel.aggregate([
+      { $match: { stationId, dateTime: { $gte: since } } },
+      {
+        $group: {
+          _id: {
+            $subtract: ['$dateTime', { $mod: [{ $toLong: '$dateTime' }, 86400000] }],
+          },
+          averageTemperature: { $avg: '$temperature' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]).exec();
+    return result.map((r) => ({ dayStart: new Date(r._id), averageTemperature: r.averageTemperature }));
+  }
+
   async filterMeasurementsBy(filters: RepositoryMeasurementFilters): Promise<ClimateMeasurement[]> {
     const query: Record<string, unknown> = {};
 

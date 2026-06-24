@@ -25,6 +25,7 @@ describe('RabbitMQMeasurementConsumer', () => {
       search: jest.fn(),
       getCurrentMeasurementByStationId: jest.fn(),
       getDailyAverageByStationId: jest.fn(),
+      getWeeklyTemperatureAverageByStationId: jest.fn(),
     };
 
     mockChannel = {

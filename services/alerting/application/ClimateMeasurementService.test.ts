@@ -20,6 +20,7 @@ describe('ClimateMeasurementService', () => {
       findByStationId: jest.fn(),
       findLatestByStationId: jest.fn(),
       getHourlyTemperaturesByStationId: jest.fn(),
+      getWeeklyAverageTemperatureByStationId: jest.fn(),
       filterMeasurementsBy: jest.fn(),
       getAll: jest.fn(),
     };
@@ -200,6 +201,39 @@ describe('ClimateMeasurementService', () => {
       climateMeasurementRepository.getHourlyTemperaturesByStationId.mockResolvedValue([]);
 
       const result = await service.getDailyAverageByStationId('station-id');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getWeeklyTemperatureAverageByStationId', () => {
+    it('should return 7 daily slots filling gaps with null', async () => {
+      const now = new Date();
+      const dayStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      dayStart.setUTCHours(0, 0, 0, 0);
+
+      climateMeasurementRepository.getWeeklyAverageTemperatureByStationId.mockResolvedValue([
+        { dayStart, averageTemperature: 21.8 },
+      ]);
+
+      const result = await service.getWeeklyTemperatureAverageByStationId('station-id');
+
+      expect(climateMeasurementRepository.getWeeklyAverageTemperatureByStationId).toHaveBeenCalledWith(
+        'station-id',
+        expect.any(Date),
+      );
+      expect(result).not.toBeNull();
+      expect(result!.stationId).toBe('station-id');
+      expect(result!.averageTemperature).toBe(21.8);
+      expect(result!.data).toHaveLength(7);
+      expect(result!.data[0].temperature).toBe(21.8);
+      expect(result!.data.slice(1).every((p) => p.temperature === null)).toBe(true);
+    });
+
+    it('should return null when no measurements exist in the last 7 days', async () => {
+      climateMeasurementRepository.getWeeklyAverageTemperatureByStationId.mockResolvedValue([]);
+
+      const result = await service.getWeeklyTemperatureAverageByStationId('station-id');
 
       expect(result).toBeNull();
     });
