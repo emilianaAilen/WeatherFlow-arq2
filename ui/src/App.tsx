@@ -4,6 +4,7 @@ import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import AppShell from './components/layout/AppShell';
 import UsersPage from './components/users/UsersPage';
 import WeatherStationsPage from './components/weatherStations/WeatherStationsPage';
+import WeatherStationDashboard from './components/weatherStations/WeatherStationDashboard';
 import MeasurementsPage from './components/measurements/MeasurementsPage';
 
 const queryClient = new QueryClient({
@@ -27,6 +28,7 @@ export default function App() {
               <Route index element={<Navigate to="/users" replace />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="weather-stations" element={<WeatherStationsPage />} />
+              <Route path="weather-stations/:id" element={<WeatherStationDashboard />} />
               <Route path="measurements" element={<MeasurementsPage />} />
             </Route>
           </Routes>

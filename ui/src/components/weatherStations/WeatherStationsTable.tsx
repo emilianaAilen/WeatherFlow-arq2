@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Chip,
   IconButton,
@@ -14,6 +15,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import type { WeatherStation } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Notification from '../common/Notification';
@@ -25,6 +27,7 @@ interface Props {
 }
 
 export default function WeatherStationsTable({ stations, onEdit }: Props) {
+  const navigate = useNavigate();
   const [deleteTarget, setDeleteTarget] = useState<WeatherStation | null>(null);
   const [notification, setNotification] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
   const deleteStation = useDeleteStation();
@@ -90,6 +93,15 @@ export default function WeatherStationsTable({ stations, onEdit }: Props) {
                   </Tooltip>
                 </TableCell>
                 <TableCell align="right">
+                  <Tooltip title="View Dashboard">
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => navigate(`/weather-stations/${station.id}`)}
+                    >
+                      <DashboardIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                   <Tooltip title="Edit">
                     <IconButton size="small" onClick={() => onEdit(station)}>
                       <EditIcon fontSize="small" />
