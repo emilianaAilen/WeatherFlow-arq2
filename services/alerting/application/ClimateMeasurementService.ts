@@ -49,6 +49,10 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
     return updated;
   }
 
+  async getCurrentMeasurementByStationId(stationId: string): Promise<ClimateMeasurement | null> {
+    return this.climateMeasurementRepository.findLatestByStationId(stationId);
+  }
+
   async search(filters: MeasurementFilters): Promise<ClimateMeasurement[]> {
     const repoFilters: RepositoryMeasurementFilters = {
       minTemperature: filters.minTemperature,

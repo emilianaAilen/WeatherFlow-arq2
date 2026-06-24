@@ -135,6 +135,39 @@ export function registerMeasurementPaths(registry: OpenAPIRegistry): void {
   });
 
   registry.registerPath({
+    method: 'get',
+    path: '/measurements/stations/{stationId}/current',
+    summary: 'Get the latest measurement for a station',
+    description: 'Returns the most recent climate measurement recorded for the given station.',
+    tags: [measurementTag.name],
+    request: {
+      params: z.object({
+        stationId: z.uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
+      }),
+    },
+    responses: {
+      200: {
+        description: 'Latest measurement found.',
+        content: { 'application/json': { schema: ClimateMeasurementResponseSchema } },
+      },
+      400: {
+        description: 'The provided stationId is not a valid UUID.',
+        content: {
+          'application/json': {
+            schema: errorResponse('Invalid stationId format — must be a UUID'),
+          },
+        },
+      },
+      404: {
+        description: 'No measurements found for this station.',
+        content: {
+          'application/json': { schema: errorResponse('No measurements found for this station') },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
     method: 'post',
     path: '/measurements',
     summary: 'Create a new climate measurement',

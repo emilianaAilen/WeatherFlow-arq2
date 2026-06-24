@@ -7,6 +7,10 @@ router.get('/', (req: Request, res: Response, next: NextFunction) =>
   measurementController.search(req, res, next),
 );
 
+router.get('/stations/:stationId/current', (req: Request, res: Response, next: NextFunction) =>
+  measurementController.getCurrentMeasurementByStation(req, res, next),
+);
+
 router.post('/', (req: Request, res: Response, next: NextFunction) =>
   measurementController.createMeasurement(req, res, next),
 );
