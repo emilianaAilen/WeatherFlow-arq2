@@ -30,7 +30,7 @@ export default function WeatherStationDashboard() {
   const isLoading = stationsLoading || measurementLoading;
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
+    <Box sx={{ p: 3 }}>
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={() => navigate('/weather-stations')}
