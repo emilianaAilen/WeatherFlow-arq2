@@ -1,5 +1,5 @@
 import { alertingClient as client } from './client';
-import type { Measurement, MeasurementFilters } from '../types';
+import type { DailyAverageResult, Measurement, MeasurementFilters } from '../types';
 
 export interface CreateMeasurementPayload {
   temperature: number;
@@ -48,4 +48,7 @@ export const measurementsApi = {
 
   getCurrentByStation: (stationId: string) =>
     client.get<Measurement>(`/measurements/stations/${stationId}/current`).then((r) => r.data),
+
+  getDailyAverageByStation: (stationId: string) =>
+    client.get<DailyAverageResult>(`/measurements/stations/${stationId}/average/daily`).then((r) => r.data),
 };

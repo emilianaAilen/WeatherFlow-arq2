@@ -54,6 +54,19 @@ export interface MeasurementFilters {
   alert_status?: boolean;
 }
 
+export interface HourlyTemperaturePoint {
+  time: string;
+  temperature: number | null;
+}
+
+export interface DailyAverageResult {
+  stationId: string;
+  averageTemperature: number;
+  from: string;
+  to: string;
+  data: HourlyTemperaturePoint[];
+}
+
 export interface ApiError {
   message: string;
   errors?: { field: string; message: string }[];
