@@ -45,4 +45,7 @@ export const measurementsApi = {
     client.patch<Measurement>(`/measurements/${id}`, data).then((r) => r.data),
 
   delete: (id: string) => client.delete(`/measurements/${id}`),
+
+  getCurrentByStation: (stationId: string) =>
+    client.get<Measurement>(`/measurements/stations/${stationId}/current`).then((r) => r.data),
 };
