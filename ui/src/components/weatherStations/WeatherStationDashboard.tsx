@@ -25,9 +25,48 @@ import {
 import { useCurrentMeasurement } from '../../hooks/useCurrentMeasurement';
 import { useWeatherStations } from '../../hooks/useWeatherStations';
 import { useDailyAverage } from '../../hooks/useDailyAverage';
+import { useWeeklyAverage } from '../../hooks/useWeeklyAverage';
 
 function formatHour(isoTime: string) {
-  return new Date(isoTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  return new Date(isoTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' });
+}
+
+function formatDay(isoDate: string) {
+  return new Date(isoDate).toLocaleDateString([], { weekday: 'short', month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+}
+
+function TemperatureChart({
+  data,
+  average,
+  dataKey,
+  barColor,
+}: {
+  data: { label: string; temperature: number | null }[];
+  average: number;
+  dataKey: string;
+  barColor: string;
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey={dataKey} tick={{ fontSize: 11 }} interval="preserveStartEnd" />
+        <YAxis tick={{ fontSize: 11 }} domain={['auto', 'auto']} unit="°" />
+        <Tooltip
+          formatter={(value: number | null) =>
+            value !== null ? [`${value.toFixed(1)}°C`, 'Avg temperature'] : ['No data', '']
+          }
+        />
+        <ReferenceLine
+          y={average}
+          stroke="#1565c0"
+          strokeDasharray="4 2"
+          label={{ value: 'Avg', position: 'insideTopRight', fontSize: 11, fill: '#1565c0' }}
+        />
+        <Bar dataKey="temperature" fill={barColor} radius={[3, 3, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
 }
 
 export default function WeatherStationDashboard() {
@@ -37,32 +76,18 @@ export default function WeatherStationDashboard() {
   const { data: stations, isLoading: stationsLoading } = useWeatherStations();
   const station = stations?.find((s) => s.id === id);
 
-  const {
-    data: measurement,
-    isLoading: measurementLoading,
-    error: measurementError,
-  } = useCurrentMeasurement(id);
+  const { data: measurement, isLoading: measurementLoading, error: measurementError } = useCurrentMeasurement(id);
+  const { data: dailyAverage, isLoading: dailyLoading, error: dailyError } = useDailyAverage(id);
+  const { data: weeklyAverage, isLoading: weeklyLoading, error: weeklyError } = useWeeklyAverage(id);
 
-  const {
-    data: dailyAverage,
-    isLoading: dailyLoading,
-    error: dailyError,
-  } = useDailyAverage(id);
+  const isLoading = stationsLoading || measurementLoading || dailyLoading || weeklyLoading;
 
-  const isLoading = stationsLoading || measurementLoading || dailyLoading;
-
-  const chartData = dailyAverage?.data.map((point) => ({
-    hour: formatHour(point.time),
-    temperature: point.temperature,
-  }));
+  const dailyChartData = dailyAverage?.data.map((p) => ({ label: formatHour(p.time), temperature: p.temperature }));
+  const weeklyChartData = weeklyAverage?.data.map((p) => ({ label: formatDay(p.date), temperature: p.temperature }));
 
   return (
     <Box sx={{ p: 3 }}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/weather-stations')}
-        sx={{ mb: 3 }}
-      >
+      <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/weather-stations')} sx={{ mb: 3 }}>
         Back to Stations
       </Button>
 
@@ -84,7 +109,7 @@ export default function WeatherStationDashboard() {
 
       {!isLoading && (
         <Grid container spacing={3}>
-          {/* Current temperature card */}
+          {/* Current temperature */}
           <Grid size={{ xs: 12, md: 4 }}>
             {measurementError ? (
               <Alert severity="error">
@@ -119,7 +144,7 @@ export default function WeatherStationDashboard() {
               <Alert severity="error">
                 {(dailyError as { message?: string }).message ?? 'Failed to load daily average.'}
               </Alert>
-            ) : dailyAverage && chartData ? (
+            ) : dailyAverage && dailyChartData ? (
               <Card elevation={3} sx={{ height: '100%' }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 2 }}>
@@ -127,41 +152,49 @@ export default function WeatherStationDashboard() {
                       Temperature — Last 24 Hours
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Avg&nbsp;
-                      <strong>{dailyAverage.averageTemperature.toFixed(1)}°C</strong>
+                      Avg <strong>{dailyAverage.averageTemperature.toFixed(1)}°C</strong>
                     </Typography>
                   </Box>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis
-                        dataKey="hour"
-                        tick={{ fontSize: 11 }}
-                        interval={2}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 11 }}
-                        domain={['auto', 'auto']}
-                        unit="°"
-                      />
-                      <Tooltip
-                        formatter={(value: number | null) =>
-                          value !== null ? [`${value.toFixed(1)}°C`, 'Avg temperature'] : ['No data', '']
-                        }
-                      />
-                      <ReferenceLine
-                        y={dailyAverage.averageTemperature}
-                        stroke="#1565c0"
-                        strokeDasharray="4 2"
-                        label={{ value: 'Avg', position: 'insideTopRight', fontSize: 11, fill: '#1565c0' }}
-                      />
-                      <Bar dataKey="temperature" fill="#42a5f5" radius={[3, 3, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <TemperatureChart
+                    data={dailyChartData}
+                    average={dailyAverage.averageTemperature}
+                    dataKey="label"
+                    barColor="#42a5f5"
+                  />
                 </CardContent>
               </Card>
             ) : (
               <Alert severity="info">No daily data available for this station.</Alert>
+            )}
+          </Grid>
+
+          {/* Weekly average chart */}
+          <Grid size={{ xs: 12 }}>
+            {weeklyError ? (
+              <Alert severity="error">
+                {(weeklyError as { message?: string }).message ?? 'Failed to load weekly average.'}
+              </Alert>
+            ) : weeklyAverage && weeklyChartData ? (
+              <Card elevation={3}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 2 }}>
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      Temperature — Last 7 Days
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Avg <strong>{weeklyAverage.averageTemperature.toFixed(1)}°C</strong>
+                    </Typography>
+                  </Box>
+                  <TemperatureChart
+                    data={weeklyChartData}
+                    average={weeklyAverage.averageTemperature}
+                    dataKey="label"
+                    barColor="#66bb6a"
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <Alert severity="info">No weekly data available for this station.</Alert>
             )}
           </Grid>
         </Grid>

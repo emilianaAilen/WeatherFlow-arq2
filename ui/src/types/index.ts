@@ -54,6 +54,19 @@ export interface MeasurementFilters {
   alert_status?: boolean;
 }
 
+export interface DailyTemperaturePoint {
+  date: string;
+  temperature: number | null;
+}
+
+export interface WeeklyAverageResult {
+  stationId: string;
+  averageTemperature: number;
+  from: string;
+  to: string;
+  data: DailyTemperaturePoint[];
+}
+
 export interface HourlyTemperaturePoint {
   time: string;
   temperature: number | null;
