@@ -165,8 +165,26 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
 
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: weatherflow-grafana-dev
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data_dev:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
 volumes:
   mongo_data_dev:
   prometheus_data_dev:
   loki_data_dev:
   tempo_data_dev:
+  grafana_data_dev:

@@ -159,6 +159,26 @@ services:
       - weatherflow-network
     restart: unless-stopped
 
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: weatherflow-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - weatherflow-network
+    restart: unless-stopped
+
 networks:
   weatherflow-network:
     driver: bridge
@@ -167,3 +187,4 @@ volumes:
   prometheus_data:
   loki_data:
   tempo_data:
+  grafana_data:
