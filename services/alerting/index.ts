@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import '@/infrastructure/telemetry/tracing';
 import { randomUUID } from 'crypto';
 import cors from 'cors';
 import express, { Express, Request, Response, NextFunction } from 'express';
