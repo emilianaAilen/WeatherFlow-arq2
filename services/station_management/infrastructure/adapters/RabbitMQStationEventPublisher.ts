@@ -61,6 +61,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
       }),
     );
     channel.publish(EXCHANGE, '', payload, { persistent: true });
+    logger.info({ stationId: station.id, eventType: 'StationCreated' }, 'Station event published');
   }
 
   async publishStationUpdated(station: WeatherStation): Promise<void> {
@@ -76,6 +77,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
       }),
     );
     channel.publish(EXCHANGE, '', payload, { persistent: true });
+    logger.info({ stationId: station.id, eventType: 'StationUpdated' }, 'Station event published');
   }
 
   async publishStationDeleted(stationId: string): Promise<void> {
@@ -87,6 +89,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
       }),
     );
     channel.publish(EXCHANGE, '', payload, { persistent: true });
+    logger.info({ stationId, eventType: 'StationDeleted' }, 'Station event published');
   }
 
   async close(): Promise<void> {
