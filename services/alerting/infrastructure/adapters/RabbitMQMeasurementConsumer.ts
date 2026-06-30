@@ -1,8 +1,10 @@
 import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { z } from 'zod';
 import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasurementPort';
+import { context, trace, SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { logger } from '@/infrastructure/logger';
 import { measurementsConsumedTotal, dlqMessagesTotal } from '@/infrastructure/telemetry/metrics';
+import { extractTraceContext } from '@/infrastructure/telemetry/amqpPropagation';
 
 const EXCHANGE = 'ingested-measurements';
 const QUEUE = 'alerting.ingested-measurements';
@@ -70,21 +72,33 @@ export class RabbitMQMeasurementConsumer {
       this.channel.consume(QUEUE, async (msg) => {
         if (!msg) return;
 
-        try {
-          const rawPayload = JSON.parse(msg.content.toString());
-          const payload = MeasurementPayloadSchema.parse(rawPayload);
+        const parentCtx = extractTraceContext(msg.properties.headers);
+        const span = trace.getTracer('alerting').startSpan('rabbitmq.consume alerting.ingested-measurements', {
+          kind: SpanKind.CONSUMER,
+        });
 
-          await this.measurementService.createMeasurement(payload);
-          measurementsConsumedTotal.inc({ status: 'success' });
-          logger.info({ stationId: payload.stationId }, 'Measurement consumed from RabbitMQ');
+        await context.with(trace.setSpan(parentCtx, span), async () => {
+          try {
+            const rawPayload = JSON.parse(msg.content.toString());
+            const payload = MeasurementPayloadSchema.parse(rawPayload);
 
-          this.channel?.ack(msg);
-        } catch (error) {
-          measurementsConsumedTotal.inc({ status: 'error' });
-          dlqMessagesTotal.inc();
-          logger.error({ error: (error as Error).message }, 'Error processing ingested measurement, moving to DLQ');
-          this.channel?.nack(msg, false, false);
-        }
+            await this.measurementService.createMeasurement(payload);
+            measurementsConsumedTotal.inc({ status: 'success' });
+            span.setStatus({ code: SpanStatusCode.OK });
+            logger.info({ stationId: payload.stationId }, 'Measurement consumed from RabbitMQ');
+
+            this.channel?.ack(msg);
+          } catch (error) {
+            measurementsConsumedTotal.inc({ status: 'error' });
+            dlqMessagesTotal.inc();
+            span.recordException(error as Error);
+            span.setStatus({ code: SpanStatusCode.ERROR });
+            logger.error({ error: (error as Error).message }, 'Error processing ingested measurement, moving to DLQ');
+            this.channel?.nack(msg, false, false);
+          } finally {
+            span.end();
+          }
+        });
       });
 
       logger.info('RabbitMQ MeasurementConsumer (alerting) started successfully');

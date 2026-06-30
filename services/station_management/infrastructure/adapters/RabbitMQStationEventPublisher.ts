@@ -3,6 +3,7 @@ import { WeatherStation } from '@/domain';
 import { IStationEventPublisher } from '@/infrastructure/ports';
 import { logger } from '@/infrastructure/logger';
 import { stationEventsPublishedTotal } from '@/infrastructure/telemetry/metrics';
+import { injectTraceHeaders } from '@/infrastructure/telemetry/amqpPropagation';
 
 const EXCHANGE = 'station-events';
 
@@ -61,7 +62,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         longitude: station.getLocation().getLongitude(),
       }),
     );
-    channel.publish(EXCHANGE, '', payload, { persistent: true });
+    channel.publish(EXCHANGE, '', payload, { persistent: true, headers: injectTraceHeaders() });
     stationEventsPublishedTotal.inc({ event_type: 'StationCreated' });
     logger.info({ stationId: station.id, eventType: 'StationCreated' }, 'Station event published');
   }
@@ -78,7 +79,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         longitude: station.getLocation().getLongitude(),
       }),
     );
-    channel.publish(EXCHANGE, '', payload, { persistent: true });
+    channel.publish(EXCHANGE, '', payload, { persistent: true, headers: injectTraceHeaders() });
     stationEventsPublishedTotal.inc({ event_type: 'StationUpdated' });
     logger.info({ stationId: station.id, eventType: 'StationUpdated' }, 'Station event published');
   }
@@ -91,7 +92,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
         id: stationId,
       }),
     );
-    channel.publish(EXCHANGE, '', payload, { persistent: true });
+    channel.publish(EXCHANGE, '', payload, { persistent: true, headers: injectTraceHeaders() });
     stationEventsPublishedTotal.inc({ event_type: 'StationDeleted' });
     logger.info({ stationId, eventType: 'StationDeleted' }, 'Station event published');
   }
