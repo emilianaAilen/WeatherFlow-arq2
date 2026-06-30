@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { randomUUID } from 'crypto';
 import cors from 'cors';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
@@ -26,7 +27,13 @@ class App {
   }
 
   private setupMiddlewares(): void {
-    this.app.use(pinoHttp({ logger }));
+    this.app.use(
+      pinoHttp({
+        logger,
+        genReqId: (req) => (req.headers['x-request-id'] as string) ?? randomUUID(),
+        autoLogging: { ignore: (req) => req.url === '/health' },
+      }),
+    );
     this.app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
