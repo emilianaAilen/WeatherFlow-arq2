@@ -2,6 +2,7 @@ import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { WeatherStation } from '@/domain';
 import { IStationEventPublisher } from '@/infrastructure/ports';
 import { logger } from '@/infrastructure/logger';
+import { stationEventsPublishedTotal } from '@/infrastructure/telemetry/metrics';
 
 const EXCHANGE = 'station-events';
 
@@ -61,6 +62,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
       }),
     );
     channel.publish(EXCHANGE, '', payload, { persistent: true });
+    stationEventsPublishedTotal.inc({ event_type: 'StationCreated' });
     logger.info({ stationId: station.id, eventType: 'StationCreated' }, 'Station event published');
   }
 
@@ -77,6 +79,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
       }),
     );
     channel.publish(EXCHANGE, '', payload, { persistent: true });
+    stationEventsPublishedTotal.inc({ event_type: 'StationUpdated' });
     logger.info({ stationId: station.id, eventType: 'StationUpdated' }, 'Station event published');
   }
 
@@ -89,6 +92,7 @@ export class RabbitMQStationEventPublisher implements IStationEventPublisher {
       }),
     );
     channel.publish(EXCHANGE, '', payload, { persistent: true });
+    stationEventsPublishedTotal.inc({ event_type: 'StationDeleted' });
     logger.info({ stationId, eventType: 'StationDeleted' }, 'Station event published');
   }
 

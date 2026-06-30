@@ -1,6 +1,7 @@
 import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { IMeasurementPublisher, MeasurementMessage } from '@/infrastructure/ports';
 import { logger } from '@/infrastructure/logger';
+import { measurementsIngestedTotal } from '@/infrastructure/telemetry/metrics';
 
 const EXCHANGE = 'ingested-measurements';
 
@@ -51,6 +52,7 @@ export class RabbitMQMeasurementPublisher implements IMeasurementPublisher {
     const channel = await this.getChannel();
     const payload = Buffer.from(JSON.stringify(message));
     channel.publish(EXCHANGE, '', payload, { persistent: true });
+    measurementsIngestedTotal.inc();
     logger.info({ stationId: message.stationId, exchange: EXCHANGE }, 'Measurement published to RabbitMQ');
   }
 

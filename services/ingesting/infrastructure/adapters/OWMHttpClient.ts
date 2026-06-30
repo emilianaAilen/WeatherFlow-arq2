@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { IWeatherClient, WeatherData } from '@/infrastructure/ports';
 import { CircuitBreaker } from '@/infrastructure/fault-tolerance/CircuitBreaker';
 import { logger } from '@/infrastructure/logger';
+import { owmFetchTotal } from '@/infrastructure/telemetry/metrics';
 
 const OWMResponseSchema = z.object({
   main: z.object({
@@ -44,6 +45,7 @@ export class OWMHttpClient implements IWeatherClient {
 
         if (!response.ok) {
           logger.error({ lat: latitude, lon: longitude, status: response.status }, 'OWM request failed');
+          owmFetchTotal.inc({ status: 'error' });
           throw new OWMApiError(`OWM API responded with status ${response.status}`);
         }
 
@@ -57,10 +59,12 @@ export class OWMHttpClient implements IWeatherClient {
         };
 
         logger.info({ lat: latitude, lon: longitude, ...data }, 'OWM data received');
+        owmFetchTotal.inc({ status: 'success' });
         return data;
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           logger.error({ lat: latitude, lon: longitude, timeoutMs: this.timeoutMs }, 'OWM request timed out');
+          owmFetchTotal.inc({ status: 'timeout' });
         }
         throw error;
       } finally {

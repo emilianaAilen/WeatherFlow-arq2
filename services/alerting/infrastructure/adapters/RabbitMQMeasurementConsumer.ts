@@ -2,6 +2,7 @@ import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { z } from 'zod';
 import { ClimateMeasurementPort } from '@/user-interface/ports/ClimateMeasurementPort';
 import { logger } from '@/infrastructure/logger';
+import { measurementsConsumedTotal, dlqMessagesTotal } from '@/infrastructure/telemetry/metrics';
 
 const EXCHANGE = 'ingested-measurements';
 const QUEUE = 'alerting.ingested-measurements';
@@ -74,10 +75,13 @@ export class RabbitMQMeasurementConsumer {
           const payload = MeasurementPayloadSchema.parse(rawPayload);
 
           await this.measurementService.createMeasurement(payload);
+          measurementsConsumedTotal.inc({ status: 'success' });
           logger.info({ stationId: payload.stationId }, 'Measurement consumed from RabbitMQ');
 
           this.channel?.ack(msg);
         } catch (error) {
+          measurementsConsumedTotal.inc({ status: 'error' });
+          dlqMessagesTotal.inc();
           logger.error({ error: (error as Error).message }, 'Error processing ingested measurement, moving to DLQ');
           this.channel?.nack(msg, false, false);
         }

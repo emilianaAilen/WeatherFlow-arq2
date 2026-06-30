@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { WeatherIngestionService } from '@/application/WeatherIngestionService';
 import { logger } from '@/infrastructure/logger';
+import { ingestionCycleDurationMs } from '@/infrastructure/telemetry/metrics';
 
 export class IngestionScheduler {
   private task: cron.ScheduledTask | null = null;
@@ -18,11 +19,13 @@ export class IngestionScheduler {
         return;
       }
       this.isRunning = true;
+      const stopTimer = ingestionCycleDurationMs.startTimer();
       try {
         await this.ingestionService.runIngestionCycle();
       } catch (error) {
         logger.error({ error: (error as Error).message }, 'Ingestion cycle failed unexpectedly');
       } finally {
+        stopTimer();
         this.isRunning = false;
       }
     });
