@@ -1,0 +1,94 @@
+groups:
+  - name: weatherflow.service_health
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~"alerting|station_management|ingesting"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is DOWN"
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_request_duration_ms_count{status_code=~"5.."}[5m])) by (service)
+          /
+          sum(rate(http_request_duration_ms_count[5m])) by (service) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Error rate > 5% on {{ $labels.service }}"
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_ms_bucket[5m])) by (le, service)
+          ) > 2000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 latency > 2s on {{ $labels.service }}"
+
+  - name: weatherflow.ingestion
+    interval: 30s
+    rules:
+      - alert: OWMCircuitBreakerOpen
+        expr: owm_circuit_breaker_state == 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OWM circuit breaker is OPEN — ingestion halted"
+
+      - alert: NoMeasurementsIngested
+        expr: increase(measurements_ingested_total[10m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No measurements ingested in the last 10 minutes"
+
+      - alert: HighOWMErrorRate
+        expr: |
+          (rate(owm_fetch_total{status="error"}[5m]) + rate(owm_fetch_total{status="timeout"}[5m]))
+          >
+          rate(owm_fetch_total{status="success"}[5m]) * 0.5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OWM error rate exceeds 50% of successes"
+
+  - name: weatherflow.alerting_service
+    interval: 30s
+    rules:
+      - alert: DLQGrowing
+        expr: increase(dlq_messages_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dead letter queue is accumulating messages"
+
+  - name: weatherflow.infrastructure
+    interval: 60s
+    rules:
+      - alert: HighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{name=~"weatherflow.*"}[2m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} CPU > 80%"
+
+      - alert: RabbitMQQueueDepthHigh
+        expr: rabbitmq_queue_messages_ready > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue {{ $labels.queue }} has {{ $value }} unprocessed messages"

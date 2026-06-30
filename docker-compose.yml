@@ -21,8 +21,13 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: weatherflow-rabbitmq
     ports:
-      - "5672:5672" # Puerto de mensajes
-      - "15672:15672" # Panel de administración
+      - "5672:5672"
+      - "15672:15672"
+      - "15692:15692" # Prometheus metrics
+    environment:
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbitmq_prometheus return_per_object_metrics true
+    volumes:
+      - ./observability/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 30s
@@ -44,6 +49,8 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-secret}@mongodb:27017/alerting?authSource=admin
       RABBITMQ_URL: amqp://rabbitmq:5672
+      OTEL_SERVICE_NAME: alerting
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
     depends_on:
       mongodb:
         condition: service_started
@@ -63,6 +70,8 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-secret}@mongodb:27017/station_management?authSource=admin
       RABBITMQ_URL: amqp://rabbitmq:5672
+      OTEL_SERVICE_NAME: station_management
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
     depends_on:
       mongodb:
         condition: service_started
@@ -87,6 +96,8 @@ services:
       OWM_CRON: ${OWM_CRON:-*/5 * * * *}
       OWM_BASE_URL: ${OWM_BASE_URL:-https://api.openweathermap.org/data/2.5}
       OWM_TIMEOUT_MS: ${OWM_TIMEOUT_MS:-5000}
+      OTEL_SERVICE_NAME: ingesting
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
     depends_on:
       mongodb:
         condition: service_started
@@ -112,9 +123,83 @@ services:
       - weatherflow-network
     restart: unless-stopped
 
+  # ==========================================
+  # OBSERVABILIDAD
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: weatherflow-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    networks:
+      - weatherflow-network
+
+  loki:
+    image: grafana/loki:2.9.7
+    container_name: weatherflow-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - weatherflow-network
+
+  promtail:
+    image: grafana/promtail:2.9.7
+    container_name: weatherflow-promtail
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./observability/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - weatherflow-network
+
+  tempo:
+    image: grafana/tempo:2.4.2
+    container_name: weatherflow-tempo
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "3200:3200"   # Tempo HTTP API
+    volumes:
+      - ./observability/tempo/tempo-config.yml:/etc/tempo/config.yml:ro
+      - tempo_data:/tmp/tempo
+    command: -config.file=/etc/tempo/config.yml
+    networks:
+      - weatherflow-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: weatherflow-cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - weatherflow-network
+
 networks:
   weatherflow-network:
     driver: bridge
 
 volumes:
   mongo_data:
+  prometheus_data:
+  loki_data:
+  tempo_data:
