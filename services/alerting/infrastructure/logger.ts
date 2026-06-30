@@ -10,7 +10,4 @@ export const logger = pino({
     const ctx = span.spanContext();
     return { traceId: ctx.traceId, spanId: ctx.spanId };
   },
-  ...(process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test' && {
-    transport: { target: 'pino-pretty', options: { colorize: true, translateTime: 'HH:MM:ss' } },
-  }),
 });
