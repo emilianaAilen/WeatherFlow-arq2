@@ -88,7 +88,7 @@ export class RabbitMQStationEventConsumer {
       this.channel.consume(QUEUE, async (msg) => {
         if (!msg) return;
 
-        const parentCtx = extractTraceContext(msg.properties.headers);
+        const parentCtx = extractTraceContext(msg.properties?.headers);
         const span = trace.getTracer('ingesting').startSpan('rabbitmq.consume ingesting.station-events', {
           kind: SpanKind.CONSUMER,
         });

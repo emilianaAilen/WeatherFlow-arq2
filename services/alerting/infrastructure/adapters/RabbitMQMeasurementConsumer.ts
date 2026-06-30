@@ -72,7 +72,7 @@ export class RabbitMQMeasurementConsumer {
       this.channel.consume(QUEUE, async (msg) => {
         if (!msg) return;
 
-        const parentCtx = extractTraceContext(msg.properties.headers);
+        const parentCtx = extractTraceContext(msg.properties?.headers);
         const span = trace.getTracer('alerting').startSpan('rabbitmq.consume alerting.ingested-measurements', {
           kind: SpanKind.CONSUMER,
         });
