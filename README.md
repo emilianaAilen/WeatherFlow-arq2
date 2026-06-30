@@ -41,7 +41,7 @@ Grafana comes with three pre-provisioned dashboards under the **WeatherFlow** fo
 - **API Performance** — request rate, latency percentiles, error rates per service
 - **Business Metrics** — measurements ingested, alerts triggered, OWM success rate, circuit breaker state
 
-Logs from all services are collected by Promtail and stored in Loki. Distributed traces are collected by Tempo via OpenTelemetry. Clicking a trace span in Grafana links directly to the correlated logs.
+Logs from all services are collected by Grafana Alloy and stored in Loki. Distributed traces are collected by Tempo via OpenTelemetry. Clicking a trace span in Grafana links directly to the correlated logs.
 
 ## Running Locally
 

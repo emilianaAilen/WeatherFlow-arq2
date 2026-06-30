@@ -131,14 +131,13 @@ services:
       - loki_data_dev:/loki
     command: -config.file=/etc/loki/local-config.yaml
 
-  promtail:
-    image: grafana/promtail:2.9.7
-    container_name: weatherflow-promtail-dev
+  alloy:
+    image: grafana/alloy:latest
+    container_name: weatherflow-alloy-dev
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./observability/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
-    command: -config.file=/etc/promtail/config.yml
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+    command: run /etc/alloy/config.alloy
     depends_on:
       - loki
 
