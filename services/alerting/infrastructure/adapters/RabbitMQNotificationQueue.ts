@@ -2,6 +2,7 @@ import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { ClimateMeasurement } from '@/domain';
 import { INotificationQueue } from '@/infrastructure/ports';
 import { logger } from '@/infrastructure/logger';
+import { alertsTriggeredTotal } from '@/infrastructure/telemetry/metrics';
 import { injectTraceHeaders } from '@/infrastructure/telemetry/amqpPropagation';
 
 const QUEUE = 'climate-alerts';
@@ -63,6 +64,7 @@ export class RabbitMQNotificationQueue implements INotificationQueue {
       }),
     );
     channel.sendToQueue(QUEUE, payload, { persistent: true, headers: injectTraceHeaders() });
+    alertsTriggeredTotal.inc({ alert_type: measurement.alert.getType() });
     logger.info({ stationId: measurement.stationId, alertType: measurement.alert.getType() }, 'Alert notification published');
   }
 

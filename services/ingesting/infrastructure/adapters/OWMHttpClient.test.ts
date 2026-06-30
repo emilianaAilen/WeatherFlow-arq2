@@ -1,5 +1,5 @@
 import { OWMHttpClient, OWMApiError } from './OWMHttpClient';
-import { CircuitBreaker, CircuitOpenError } from '@/infrastructure/fault-tolerance/CircuitBreaker';
+import { CircuitBreaker } from '@/infrastructure/fault-tolerance/CircuitBreaker';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const API_KEY = 'test-api-key';
@@ -107,9 +107,10 @@ describe('OWMHttpClient', () => {
       await expect(client.fetchWeather(0, 0)).rejects.toThrow(OWMApiError);
       await expect(client.fetchWeather(0, 0)).rejects.toThrow(OWMApiError);
 
-      // Circuit now OPEN — fetch should not be called again
+      // Circuit now OPEN — fetchWeather returns null without calling fetch again
       const callCount = fetchSpy.mock.calls.length;
-      await expect(client.fetchWeather(0, 0)).rejects.toThrow(CircuitOpenError);
+      const result = await client.fetchWeather(0, 0);
+      expect(result).toBeNull();
       expect(fetchSpy.mock.calls.length).toBe(callCount);
     });
 

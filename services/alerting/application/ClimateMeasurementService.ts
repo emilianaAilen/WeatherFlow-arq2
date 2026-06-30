@@ -9,7 +9,6 @@ import { UpdateMeasurementRequest } from '@/user-interface/dtos/UpdateMeasuremen
 import { MeasurementFilters } from '@/user-interface/dtos/MeasurementFiltersDTO';
 import { DailyAverageResult, DailyTemperaturePoint, HourlyTemperaturePoint, RepositoryMeasurementFilters, WeeklyAverageResult } from '@/infrastructure/types';
 import { logger } from '@/infrastructure/logger';
-import { alertsTriggeredTotal } from '@/infrastructure/telemetry/metrics';
 
 export class ClimateMeasurementService implements ClimateMeasurementPort {
   constructor(
@@ -148,7 +147,6 @@ export class ClimateMeasurementService implements ClimateMeasurementPort {
     );
 
     if (measurement.alert.isActiveAlert()) {
-      alertsTriggeredTotal.inc({ alert_type: measurement.alert.getType() });
       logger.warn(
         { stationId: dto.stationId, alertType: measurement.alert.getType(),
           temperature: dto.temperature, humidity: dto.humidity, pressure: dto.atmosphericPressure },

@@ -5,5 +5,5 @@ export interface WeatherData {
 }
 
 export interface IWeatherClient {
-  fetchWeather(latitude: number, longitude: number): Promise<WeatherData>;
+  fetchWeather(latitude: number, longitude: number): Promise<WeatherData | null>;
 }

@@ -1,5 +1,4 @@
 import { IMonitoredStationRepository, IWeatherClient, IMeasurementPublisher } from '@/infrastructure/ports';
-import { CircuitOpenError } from '@/infrastructure/fault-tolerance/CircuitBreaker';
 import { logger } from '@/infrastructure/logger';
 
 export class WeatherIngestionService {
@@ -21,6 +20,11 @@ export class WeatherIngestionService {
       const stationStart = Date.now();
       try {
         const weather = await this.weatherClient.fetchWeather(station.latitude, station.longitude);
+        if (weather === null) {
+          failed++;
+          logger.warn({ stationId: station.id }, 'Station skipped — weather data unavailable');
+          continue;
+        }
         await this.measurementPublisher.publish({
           temperature: weather.temperature,
           humidity: weather.humidity,
@@ -36,11 +40,7 @@ export class WeatherIngestionService {
         );
       } catch (error) {
         failed++;
-        if (error instanceof CircuitOpenError) {
-          logger.warn({ stationId: station.id }, 'Station skipped — OWM circuit breaker is OPEN');
-        } else {
-          logger.error({ stationId: station.id, error: (error as Error).message }, 'Failed to ingest station');
-        }
+        logger.error({ stationId: station.id, error: (error as Error).message }, 'Failed to ingest station');
       }
     }
 

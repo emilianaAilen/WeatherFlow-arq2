@@ -73,6 +73,23 @@ describe('WeatherIngestionService', () => {
     );
   });
 
+  it('should skip a station and continue when fetchWeather returns null (circuit breaker open)', async () => {
+    const loggerWarnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => false);
+    const stations = [makeStation('s-1', 0, 0), makeStation('s-2', 10, 20)];
+    monitoredStationRepository.findAll.mockResolvedValue(stations);
+    weatherClient.fetchWeather
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(weatherData);
+    measurementPublisher.publish.mockResolvedValue(undefined);
+
+    await service.runIngestionCycle();
+
+    expect(weatherClient.fetchWeather).toHaveBeenCalledTimes(2);
+    expect(measurementPublisher.publish).toHaveBeenCalledTimes(1);
+    expect(loggerWarnSpy).toHaveBeenCalledWith(expect.objectContaining({ stationId: 's-1' }), expect.any(String));
+    loggerWarnSpy.mockRestore();
+  });
+
   it('should continue with remaining stations when OWM fails for one (bulkhead)', async () => {
     const loggerErrorSpy = jest.spyOn(logger, 'error').mockImplementation(() => false);
     const stations = [makeStation('s-1', 0, 0), makeStation('s-2', 10, 20)];
