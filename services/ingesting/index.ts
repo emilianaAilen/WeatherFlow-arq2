@@ -10,6 +10,8 @@ import { stationEventConsumer, ingestionScheduler } from '@/infrastructure/conta
 import { logger } from '@/infrastructure/logger';
 import pinoHttp from 'pino-http';
 import { NotFoundError } from '@/domain';
+import { register } from '@/infrastructure/telemetry/metrics';
+import { metricsMiddleware } from '@/infrastructure/telemetry/metricsMiddleware';
 
 class App {
   private app: Express;
@@ -34,6 +36,7 @@ class App {
         autoLogging: { ignore: (req) => req.url === '/health' },
       }),
     );
+    this.app.use(metricsMiddleware);
     this.app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -46,6 +49,11 @@ class App {
     this.app.get('/docs.json', (_req: Request, res: Response) => res.json(swaggerDocument));
 
     this.app.use('/monitored-stations', monitoredStationRoutes);
+
+    this.app.get('/metrics', async (_req: Request, res: Response) => {
+      res.set('Content-Type', register.contentType);
+      res.end(await register.metrics());
+    });
 
     this.app.get('/health', (_req: Request, res: Response) => {
       res.json({ status: 'OK', message: 'WeatherFlow - Ingesting API is running' });
