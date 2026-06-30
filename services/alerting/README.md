@@ -31,6 +31,7 @@ Built with hexagonal architecture.
 ├── infrastructure/                     # Driven adapters (DB, MQ)
 │   ├── adapters/
 │   │   ├── ClimateMeasurementRepository.ts
+│   │   ├── RabbitMQMeasurementConsumer.ts
 │   │   ├── RabbitMQNotificationQueue.ts
 │   │   ├── RabbitMQStationEventConsumer.ts
 │   │   └── StationReadModelRepository.ts
@@ -41,6 +42,11 @@ Built with hexagonal architecture.
 │   │   ├── IClimateMeasurementRepository.ts
 │   │   ├── INotificationQueue.ts
 │   │   └── IStationReadModelRepository.ts
+│   ├── telemetry/
+│   │   ├── amqpPropagation.ts          # W3C trace context inject/extract for RabbitMQ
+│   │   ├── metrics.ts                  # prom-client registry and counters
+│   │   ├── metricsMiddleware.ts        # Express middleware for HTTP duration histogram
+│   │   └── tracing.ts                  # OpenTelemetry SDK initialization
 │   ├── container.ts                    # Dependency injection
 │   └── types.ts
 ├── user-interface/                     # Driving adapters (HTTP)
@@ -65,14 +71,16 @@ Copy `.env.example` to `.env` and fill in the values:
 cp .env.example .env
 ```
 
-| Variable           | Description                        | Default                  |
-| ------------------ | ---------------------------------- | ------------------------ |
-| `NODE_ENV`         | Environment                        | `development`            |
-| `PORT`             | Port the server listens on         | `3000`                   |
-| `MONGODB_URI`      | MongoDB connection string          | —                        |
-| `MONGODB_DB_NAME`  | Database name                      | `alerting`               |
-| `RABBITMQ_URL`     | RabbitMQ connection string         | `amqp://localhost`       |
-| `CORS_ORIGIN`      | Allowed CORS origin                | `http://localhost:3000`  |
+| Variable                       | Description                              | Default                  |
+| ------------------------------ | ---------------------------------------- | ------------------------ |
+| `NODE_ENV`                     | Environment                              | `development`            |
+| `PORT`                         | Port the server listens on               | `3000`                   |
+| `MONGODB_URI`                  | MongoDB connection string                | —                        |
+| `MONGODB_DB_NAME`              | Database name                            | `alerting`               |
+| `RABBITMQ_URL`                 | RabbitMQ connection string               | `amqp://localhost`       |
+| `CORS_ORIGIN`                  | Allowed CORS origin                      | `http://localhost:3000`  |
+| `OTEL_SERVICE_NAME`            | Service name reported to Tempo           | `alerting`               |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`  | OTLP endpoint for traces (Tempo)         | `http://localhost:4318`  |
 
 ## Running RabbitMQ
 
@@ -165,3 +173,11 @@ docker compose down
 ```
 
 The API will be available at `http://localhost:3001` (or the `PORT_ALERTING` defined in `.env`).
+
+Additional endpoints:
+
+| Path       | Description                              |
+| ---------- | ---------------------------------------- |
+| `/metrics` | Prometheus metrics (prom-client)         |
+| `/health`  | Health check                             |
+| `/docs`    | Swagger UI                               |

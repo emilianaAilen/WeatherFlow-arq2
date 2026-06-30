@@ -23,16 +23,26 @@ Built with hexagonal architecture.
 │   │   └── MonitoredStation/
 │   └── errors/
 │       └── DomainErrors.ts
-├── infrastructure/                     # Driven adapters (DB, MQ)
+├── infrastructure/                     # Driven adapters (DB, MQ, external)
 │   ├── adapters/
+│   │   ├── IngestionScheduler.ts       # node-cron scheduler for OWM fetch cycles
 │   │   ├── MonitoredStationRepository.ts
+│   │   ├── OWMHttpClient.ts            # OpenWeatherMap HTTP adapter with fault tolerance
+│   │   ├── RabbitMQMeasurementPublisher.ts
 │   │   └── RabbitMQStationEventConsumer.ts
 │   ├── database/
 │   │   ├── MongoDBConnection.ts
 │   │   └── schemas/
 │   │       └── MonitoredStationSchema.ts
+│   ├── fault-tolerance/
+│   │   └── CircuitBreaker.ts           # Custom circuit breaker for OWM HTTP calls
 │   ├── ports/
 │   │   └── IMonitoredStationRepository.ts
+│   ├── telemetry/
+│   │   ├── amqpPropagation.ts          # W3C trace context inject/extract for RabbitMQ
+│   │   ├── metrics.ts                  # prom-client registry and counters
+│   │   ├── metricsMiddleware.ts        # Express middleware for HTTP duration histogram
+│   │   └── tracing.ts                  # OpenTelemetry SDK initialization
 │   └── container.ts                    # Dependency injection
 ├── user-interface/                     # Driving adapters (HTTP)
 │   ├── adapters/
@@ -51,13 +61,19 @@ Built with hexagonal architecture.
 
 ## Environment Variables
 
-| Variable        | Description                                     | Example                                                                 |
-| --------------- | ----------------------------------------------- | ----------------------------------------------------------------------- |
-| `NODE_ENV`      | Runtime environment                             | `development`                                                           |
-| `PORT`          | HTTP port the service listens on                | `3000`                                                                  |
-| `MONGODB_URI`   | MongoDB connection string                       | `mongodb://admin:secret@localhost:27017/ingesting?authSource=admin`     |
-| `RABBITMQ_URL`  | RabbitMQ AMQP URL                               | `amqp://localhost`                                                      |
-| `CORS_ORIGIN`   | Allowed CORS origin                             | `http://localhost:3000`                                                 |
+| Variable                       | Description                                     | Default / Example                                                       |
+| ------------------------------ | ----------------------------------------------- | ----------------------------------------------------------------------- |
+| `NODE_ENV`                     | Runtime environment                             | `development`                                                           |
+| `PORT`                         | HTTP port the service listens on                | `3000`                                                                  |
+| `MONGODB_URI`                  | MongoDB connection string                       | `mongodb://admin:secret@localhost:27017/ingesting?authSource=admin`     |
+| `RABBITMQ_URL`                 | RabbitMQ AMQP URL                               | `amqp://localhost`                                                      |
+| `CORS_ORIGIN`                  | Allowed CORS origin                             | `http://localhost:3000`                                                 |
+| `OWM_API_KEY`                  | OpenWeatherMap API key                          | —                                                                       |
+| `OWM_CRON`                     | Cron expression for ingestion cycle             | `*/5 * * * *`                                                           |
+| `OWM_BASE_URL`                 | OpenWeatherMap base URL                         | `https://api.openweathermap.org/data/2.5`                               |
+| `OWM_TIMEOUT_MS`               | OWM request timeout in milliseconds             | `5000`                                                                  |
+| `OTEL_SERVICE_NAME`            | Service name reported to Tempo                  | `ingesting`                                                             |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`  | OTLP endpoint for traces (Tempo)                | `http://localhost:4318`                                                 |
 
 Copy `.env.example` to `.env` and fill in your values.
 
@@ -102,6 +118,7 @@ Once running, the Swagger UI is available at:
 | ------ | --------------------------- | ---------------------------------------- |
 | GET    | `/monitored-stations`       | List all stations registered for ingestion |
 | GET    | `/monitored-stations/:id`   | Get a single monitored station by UUID   |
+| GET    | `/metrics`                  | Prometheus metrics (prom-client)         |
 | GET    | `/health`                   | Health check                             |
 
 ## Event Consumption
