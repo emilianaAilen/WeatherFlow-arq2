@@ -1,4 +1,5 @@
 import { logger } from '@/infrastructure/logger';
+import { owmCircuitBreakerState } from '@/infrastructure/telemetry/metrics';
 
 export class CircuitOpenError extends Error {
   constructor() {
@@ -37,6 +38,7 @@ export class CircuitBreaker {
         this.state = CircuitState.HALF_OPEN;
         this.failureCount = 0;
         this.successCount = 0;
+        owmCircuitBreakerState.set(2);
         logger.info({ service: this.name }, 'Circuit breaker probing (HALF_OPEN)');
       } else {
         logger.warn({ service: this.name }, 'Circuit breaker is OPEN, request skipped');
@@ -66,6 +68,7 @@ export class CircuitBreaker {
         this.failureCount = 0;
         this.successCount = 0;
         this.openedAt = null;
+        owmCircuitBreakerState.set(0);
         logger.info({ service: this.name }, 'Circuit breaker recovered (CLOSED)');
       }
     } else {
@@ -78,6 +81,7 @@ export class CircuitBreaker {
       this.state = CircuitState.OPEN;
       this.openedAt = Date.now();
       this.failureCount = 0;
+      owmCircuitBreakerState.set(1);
       logger.warn({ service: this.name }, 'Circuit breaker re-opened during probe');
       return;
     }
@@ -85,6 +89,7 @@ export class CircuitBreaker {
     if (this.failureCount >= this.options.failureThreshold) {
       this.state = CircuitState.OPEN;
       this.openedAt = Date.now();
+      owmCircuitBreakerState.set(1);
       logger.warn({ service: this.name, failureCount: this.failureCount }, 'Circuit breaker opened');
     }
   }

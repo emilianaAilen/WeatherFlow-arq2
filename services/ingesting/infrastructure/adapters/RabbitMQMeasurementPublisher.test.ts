@@ -42,7 +42,7 @@ describe('RabbitMQMeasurementPublisher', () => {
       'ingested-measurements',
       '',
       expect.any(Buffer),
-      { persistent: true },
+      expect.objectContaining({ persistent: true }),
     );
   });
 

@@ -1,0 +1,55 @@
+// Discover all Docker containers
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+}
+
+// Relabel: extract service name and container name from Docker Compose labels
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/?(.*)"
+    target_label  = "container"
+  }
+}
+
+// Collect logs via Docker API (receives raw log lines, no Docker JSON wrapper)
+loki.source.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.containers.output
+  forward_to       = [loki.process.parse_pino.receiver]
+  refresh_interval = "5s"
+}
+
+// Parse Pino JSON logs and extract level + traceId as Loki labels
+loki.process "parse_pino" {
+  stage.json {
+    expressions = {
+      level   = "level",
+      traceId = "traceId",
+    }
+  }
+
+  stage.labels {
+    values = {
+      level   = "",
+      traceId = "",
+    }
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
+// Write to Loki
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

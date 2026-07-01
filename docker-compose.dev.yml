@@ -21,6 +21,9 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15692:15692"
+    volumes:
+      - ./observability/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 5s
@@ -101,5 +104,88 @@ services:
       - station_management
       - alerting
 
+  # ==========================================
+  # OBSERVABILIDAD
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: weatherflow-prometheus-dev
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data_dev:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+
+  loki:
+    image: grafana/loki:2.9.7
+    container_name: weatherflow-loki-dev
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data_dev:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: weatherflow-alloy-dev
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+    command: run /etc/alloy/config.alloy
+    depends_on:
+      - loki
+
+  tempo:
+    image: grafana/tempo:2.4.2
+    container_name: weatherflow-tempo-dev
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "3200:3200"
+    volumes:
+      - ./observability/tempo/tempo-config.yml:/etc/tempo/config.yml:ro
+      - tempo_data_dev:/tmp/tempo
+    command: -config.file=/etc/tempo/config.yml
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: weatherflow-cadvisor-dev
+    privileged: true
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: weatherflow-grafana-dev
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data_dev:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
 volumes:
   mongo_data_dev:
+  prometheus_data_dev:
+  loki_data_dev:
+  tempo_data_dev:
+  grafana_data_dev:

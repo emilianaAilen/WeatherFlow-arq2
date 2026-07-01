@@ -26,6 +26,23 @@ The platform is split into three backend microservices and a frontend UI:
    - **Port:** 3000
    - **App:** http://localhost:3000
 
+## Observability
+
+The stack includes a full observability setup. Once running, the following UIs are available:
+
+| Tool       | URL                        | Purpose                              |
+| ---------- | -------------------------- | ------------------------------------ |
+| Grafana    | http://localhost:3001      | Dashboards, logs, traces (admin/admin) |
+| Prometheus | http://localhost:9090      | Metrics query and alerting rules     |
+| RabbitMQ   | http://localhost:15672     | Queue management (guest/guest)       |
+
+Grafana comes with three pre-provisioned dashboards under the **WeatherFlow** folder:
+- **Infrastructure** — CPU, memory, network per container, RabbitMQ queue depth
+- **API Performance** — request rate, latency percentiles, error rates per service
+- **Business Metrics** — measurements ingested, alerts triggered, OWM success rate, circuit breaker state
+
+Logs from all services are collected by Grafana Alloy and stored in Loki. Distributed traces are collected by Tempo via OpenTelemetry. Clicking a trace span in Grafana links directly to the correlated logs.
+
 ## Running Locally
 
 ### With Docker Compose (Recommended)
@@ -38,6 +55,7 @@ Copy the pre-configured dev environment files for each service:
 
 ```bash
 cp services/alerting/.env.example.local services/alerting/.env
+cp services/ingesting/.env.example.local services/ingesting/.env
 cp services/station_management/.env.example.local services/station_management/.env
 ```
 
@@ -126,10 +144,20 @@ This script will:
 
 ```text
 .
-├── docker-compose.dev.yml       # Docker compose for development
-├── docker-compose.yml           # Docker compose for production
-├── docker-compose.e2e.yml       # Ephemeral Docker compose for E2E tests
+├── docker-compose.yml           # Main Docker Compose (production-like)
+├── docker-compose.dev.yml       # Development mode with hot-reload
+├── docker-compose.e2e.yml       # Ephemeral environment for E2E tests
+├── docker-compose.vm.yml        # Production deploy on VM
 ├── run-e2e.sh                   # Automation script for E2E pipeline
+├── docs/
+│   └── architecture.md          # Microservices architecture decisions
+├── observability/
+│   ├── grafana/                 # Grafana datasources and dashboards
+│   ├── loki/                    # Loki configuration
+│   ├── prometheus/              # Prometheus scrape config and alert rules
+│   ├── promtail/                # Promtail log collection config
+│   ├── rabbitmq/                # RabbitMQ plugin configuration
+│   └── tempo/                   # Tempo distributed tracing config
 ├── ui/                          # React + Vite frontend
 ├── services/
 │   ├── alerting/                # Alerting microservice

@@ -72,7 +72,7 @@ describe('RabbitMQStationEventPublisher', () => {
         'station-events',
         '',
         expect.any(Buffer),
-        { persistent: true },
+        expect.objectContaining({ persistent: true }),
       );
     });
   });

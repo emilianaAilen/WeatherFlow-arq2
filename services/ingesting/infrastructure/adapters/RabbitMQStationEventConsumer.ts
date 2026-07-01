@@ -2,7 +2,9 @@ import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { z } from 'zod';
 import { IMonitoredStationRepository } from '@/infrastructure/ports';
 import { MonitoredStation } from '@/domain';
+import { context, trace, SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { logger } from '@/infrastructure/logger';
+import { extractTraceContext } from '@/infrastructure/telemetry/amqpPropagation';
 
 const EXCHANGE = 'station-events';
 const QUEUE = 'ingesting.station-events';
@@ -86,6 +88,12 @@ export class RabbitMQStationEventConsumer {
       this.channel.consume(QUEUE, async (msg) => {
         if (!msg) return;
 
+        const parentCtx = extractTraceContext(msg.properties?.headers);
+        const span = trace.getTracer('ingesting').startSpan('rabbitmq.consume ingesting.station-events', {
+          kind: SpanKind.CONSUMER,
+        });
+
+        await context.with(trace.setSpan(parentCtx, span), async () => {
         try {
           const rawPayload = JSON.parse(msg.content.toString());
           const payload = EventPayloadSchema.parse(rawPayload);
@@ -126,11 +134,17 @@ export class RabbitMQStationEventConsumer {
               break;
           }
 
+          span.setStatus({ code: SpanStatusCode.OK });
           this.channel?.ack(msg);
         } catch (error) {
+          span.recordException(error as Error);
+          span.setStatus({ code: SpanStatusCode.ERROR });
           logger.error({ error: (error as Error).message }, 'Error processing station event, moving to DLQ');
           this.channel?.nack(msg, false, false);
+        } finally {
+          span.end();
         }
+        });
       });
 
       logger.info('RabbitMQ StationEventConsumer (ingesting) started successfully');

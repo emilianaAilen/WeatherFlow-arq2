@@ -1,7 +1,9 @@
 import amqplib, { Channel, ChannelModel } from 'amqplib';
 import { z } from 'zod';
 import { IStationReadModelRepository } from '@/infrastructure/ports/IStationReadModelRepository';
+import { context, trace, SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { logger } from '@/infrastructure/logger';
+import { extractTraceContext } from '@/infrastructure/telemetry/amqpPropagation';
 
 const EXCHANGE = 'station-events';
 const QUEUE = 'alerting.station-events';
@@ -68,35 +70,47 @@ export class RabbitMQStationEventConsumer {
       this.channel.consume(QUEUE, async (msg) => {
         if (!msg) return;
 
-        try {
-          const rawPayload = JSON.parse(msg.content.toString());
-          const payload = EventPayloadSchema.parse(rawPayload);
+        const parentCtx = extractTraceContext(msg.properties?.headers);
+        const span = trace.getTracer('alerting').startSpan('rabbitmq.consume alerting.station-events', {
+          kind: SpanKind.CONSUMER,
+        });
 
-          switch (payload.eventType) {
-            case 'StationCreated':
-              if (!payload.name) throw new Error('Name required for StationCreated');
-              await this.stationReadModelRepository.save({
-                id: payload.id,
-                name: payload.name,
-              });
-              logger.info({ stationId: payload.id, name: payload.name }, 'Station added to read model');
-              break;
-            case 'StationUpdated':
-              if (!payload.name) throw new Error('Name required for StationUpdated');
-              await this.stationReadModelRepository.update(payload.id, payload.name);
-              logger.info({ stationId: payload.id, name: payload.name }, 'Station updated in read model');
-              break;
-            case 'StationDeleted':
-              await this.stationReadModelRepository.remove(payload.id);
-              logger.info({ stationId: payload.id }, 'Station removed from read model');
-              break;
+        await context.with(trace.setSpan(parentCtx, span), async () => {
+          try {
+            const rawPayload = JSON.parse(msg.content.toString());
+            const payload = EventPayloadSchema.parse(rawPayload);
+
+            switch (payload.eventType) {
+              case 'StationCreated':
+                if (!payload.name) throw new Error('Name required for StationCreated');
+                await this.stationReadModelRepository.save({
+                  id: payload.id,
+                  name: payload.name,
+                });
+                logger.info({ stationId: payload.id, name: payload.name }, 'Station added to read model');
+                break;
+              case 'StationUpdated':
+                if (!payload.name) throw new Error('Name required for StationUpdated');
+                await this.stationReadModelRepository.update(payload.id, payload.name);
+                logger.info({ stationId: payload.id, name: payload.name }, 'Station updated in read model');
+                break;
+              case 'StationDeleted':
+                await this.stationReadModelRepository.remove(payload.id);
+                logger.info({ stationId: payload.id }, 'Station removed from read model');
+                break;
+            }
+
+            span.setStatus({ code: SpanStatusCode.OK });
+            this.channel?.ack(msg);
+          } catch (error) {
+            span.recordException(error as Error);
+            span.setStatus({ code: SpanStatusCode.ERROR });
+            logger.error({ error: (error as Error).message }, 'Error processing station event, moving to DLQ');
+            this.channel?.nack(msg, false, false);
+          } finally {
+            span.end();
           }
-
-          this.channel?.ack(msg);
-        } catch (error) {
-          logger.error({ error: (error as Error).message }, 'Error processing station event, moving to DLQ');
-          this.channel?.nack(msg, false, false);
-        }
+        });
       });
 
       logger.info('RabbitMQ StationEventConsumer (alerting) started successfully');
